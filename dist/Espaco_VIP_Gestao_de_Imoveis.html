@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#16324f" />
+    <meta name="description" content="Painel de gestão de imóveis e aluguéis da Espaço VIP" />
+    <title>Espaço VIP | Gestão de Imóveis</title>
+    <style>
+:root {
+  --navy-950: #0c2236;
+  --navy-900: #12304b;
+  --navy-800: #163b5d;
+  --blue-600: #2563eb;
+  --blue-500: #3b82f6;
+  --blue-100: #dbeafe;
+  --blue-50: #eff6ff;
+  --green-700: #19704b;
+  --green-600: #239666;
+  --green-100: #dff5e9;
+  --orange-700: #9a4d00;
+  --orange-100: #fce8d2;
+  --yellow-700: #7a5b00;
+  --yellow-100: #fff4cc;
+  --red-700: #a32222;
+  --red-100: #fde2e2;
+  --ink: #182636;
+  --muted: #66758a;
+  --soft: #8995a7;
+  --line: #e5eaf0;
+  --surface: #ffffff;
+  --background: #f4f7fa;
+  --shadow-sm: 0 1px 2px rgba(12, 34, 54, 0.05), 0 3px 10px rgba(12, 34, 54, 0.04);
+  --shadow-lg: 0 24px 70px rgba(12, 34, 54, 0.18);
+  --radius: 16px;
+  --sidebar-width: 248px;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: var(--background);
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+
+html { min-width: 320px; background: var(--background); }
+body { margin: 0; min-height: 100vh; background: var(--background); }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.22);
+  outline-offset: 2px;
+}
+a { color: inherit; }
+
+.app-shell { min-height: 100vh; }
+.sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: var(--sidebar-width);
+  background: linear-gradient(180deg, var(--navy-950), var(--navy-900));
+  color: #fff;
+  padding: 24px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  z-index: 30;
+}
+
+.brand { display: flex; align-items: center; gap: 12px; padding: 0 8px 28px; }
+.brand-mark {
+  width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center;
+  background: linear-gradient(145deg, #4f8df7, #2d6fe7); font-size: 14px; font-weight: 800;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 10px 30px rgba(19, 87, 201, .28);
+}
+.brand strong { display: block; font-size: 16px; letter-spacing: -.01em; }
+.brand span { display: block; color: #9eb0c2; font-size: 11px; margin-top: 2px; }
+
+.main-nav { display: flex; flex-direction: column; gap: 5px; }
+.nav-item {
+  width: 100%; border: 0; color: #b9c6d3; background: transparent; padding: 11px 12px;
+  border-radius: 10px; display: flex; align-items: center; gap: 11px; text-align: left;
+  font-size: 13px; font-weight: 650; transition: .18s ease;
+}
+.nav-item:hover { color: #fff; background: rgba(255,255,255,.07); }
+.nav-item.active { color: #fff; background: rgba(77, 139, 244, .2); box-shadow: inset 3px 0 0 #69a1ff; }
+.nav-icon { width: 19px; height: 19px; display: grid; place-items: center; flex: 0 0 auto; }
+.nav-icon svg, [data-icon] svg { width: 100%; height: 100%; stroke: currentColor; }
+.nav-count, .nav-alert { margin-left: auto; min-width: 22px; height: 20px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center; font-size: 10px; }
+.nav-count { background: rgba(255,255,255,.1); color: #d7e0e9; }
+.nav-alert { background: #f4b54b; color: #472d00; font-weight: 800; }
+.sidebar-footer { margin-top: auto; display: grid; gap: 12px; }
+.sync-card {
+  padding: 12px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px; display: flex; align-items: flex-start; gap: 9px;
+}
+.sync-dot { width: 8px; height: 8px; border-radius: 50%; background: #70d7a5; box-shadow: 0 0 0 4px rgba(112, 215, 165, .12); margin-top: 5px; }
+.sync-card strong { display: block; font-size: 11px; }
+.sync-card span { display: block; color: #9eb0c2; font-size: 9px; margin-top: 3px; }
+
+.main-content { margin-left: var(--sidebar-width); min-height: 100vh; }
+.topbar {
+  height: 72px; position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between;
+  gap: 20px; padding: 0 30px; background: rgba(255,255,255,.94); backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--line);
+}
+.global-search {
+  width: min(500px, 55vw); height: 40px; display: flex; align-items: center; gap: 10px;
+  padding: 0 12px; color: var(--soft); background: #f7f9fb; border: 1px solid #e8edf2; border-radius: 10px;
+}
+.global-search [data-icon] { width: 18px; height: 18px; }
+.global-search input { flex: 1; border: 0; background: transparent; min-width: 0; outline: 0; color: var(--ink); font-size: 12px; }
+.global-search input::placeholder { color: #98a4b4; }
+kbd { border: 1px solid #dbe2e9; background: #fff; border-radius: 5px; color: #8793a2; font-size: 9px; padding: 3px 6px; box-shadow: 0 1px 0 #e8edf2; }
+.topbar-actions { display: flex; align-items: center; gap: 16px; }
+.icon-button { border: 0; background: transparent; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; color: var(--muted); }
+.icon-button:hover { background: #f0f4f8; color: var(--navy-900); }
+.icon-button [data-icon], .icon-button > svg { width: 19px; height: 19px; }
+.notification-button { position: relative; }
+.notification-dot { position: absolute; width: 7px; height: 7px; border-radius: 50%; background: #ef4444; border: 2px solid #fff; right: 8px; top: 7px; }
+.profile { display: flex; align-items: center; gap: 10px; padding-left: 15px; border-left: 1px solid var(--line); }
+.avatar { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--navy-900); color: white; font-size: 10px; font-weight: 800; }
+.profile strong, .profile span { display: block; white-space: nowrap; }
+.profile strong { font-size: 11px; }
+.profile span { font-size: 9px; color: var(--soft); margin-top: 2px; }
+.mobile-menu { display: none; }
+
+.page-container { padding: 30px; max-width: 1540px; margin: 0 auto; }
+.page-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 24px; }
+.eyebrow { color: var(--blue-600); text-transform: uppercase; letter-spacing: .1em; font-size: 9px; font-weight: 800; }
+.page-heading h1 { font-size: clamp(24px, 2.3vw, 34px); line-height: 1.1; letter-spacing: -.035em; margin: 7px 0 7px; color: var(--navy-950); }
+.page-heading p { margin: 0; color: var(--muted); font-size: 12px; max-width: 650px; line-height: 1.55; }
+.heading-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+.button {
+  min-height: 38px; border: 1px solid transparent; border-radius: 9px; padding: 0 14px; display: inline-flex;
+  align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 11px; transition: .18s ease;
+}
+.button [data-icon], .button svg { width: 16px; height: 16px; }
+.button.primary { color: #fff; background: var(--blue-600); box-shadow: 0 7px 18px rgba(37,99,235,.18); }
+.button.primary:hover { background: #1d55d0; transform: translateY(-1px); }
+.button.secondary { background: #fff; color: var(--ink); border-color: var(--line); }
+.button.secondary:hover { background: #f8fafc; border-color: #cfd8e2; }
+.button.ghost { background: transparent; color: var(--blue-600); padding-inline: 8px; }
+.button.danger { color: var(--red-700); background: var(--red-100); }
+
+.metrics-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
+.metric-card { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-sm); border-radius: var(--radius); padding: 17px; min-width: 0; }
+.metric-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.metric-label { color: var(--muted); font-size: 10px; font-weight: 700; }
+.metric-icon { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; color: var(--blue-600); background: var(--blue-50); }
+.metric-icon svg { width: 17px; height: 17px; }
+.metric-value { display: block; color: var(--navy-950); font-size: 25px; letter-spacing: -.035em; font-weight: 800; margin-top: 12px; }
+.metric-foot { display: flex; align-items: center; gap: 6px; color: var(--soft); font-size: 9px; margin-top: 7px; }
+.metric-foot strong { color: var(--green-700); }
+.metric-card.warning .metric-icon { color: var(--orange-700); background: var(--orange-100); }
+.metric-card.danger .metric-icon { color: var(--red-700); background: var(--red-100); }
+
+.dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.52fr) minmax(290px, .72fr); gap: 18px; align-items: start; }
+.stack { display: grid; gap: 18px; }
+.panel { background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow-sm); border-radius: var(--radius); overflow: hidden; }
+.panel-header { padding: 17px 18px 14px; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.panel-header h2 { font-size: 14px; letter-spacing: -.015em; margin: 0; color: var(--navy-950); }
+.panel-header p { color: var(--soft); font-size: 9px; margin: 4px 0 0; }
+.panel-body { padding: 0 18px 18px; }
+.panel-link { border: 0; background: transparent; color: var(--blue-600); font-size: 10px; font-weight: 750; display: inline-flex; align-items: center; gap: 5px; }
+.panel-link svg { width: 14px; height: 14px; }
+
+.alert-list { display: grid; }
+.alert-row { display: grid; grid-template-columns: 38px minmax(120px, 1fr) minmax(120px, 1fr) 108px 80px 22px; align-items: center; gap: 11px; padding: 12px 18px; border-top: 1px solid var(--line); transition: .15s ease; }
+.alert-row:hover { background: #f9fbfd; }
+.alert-date { width: 36px; height: 38px; border-radius: 9px; background: #f3f6f9; display: grid; place-items: center; line-height: 1; }
+.alert-date strong { font-size: 13px; }
+.alert-date span { font-size: 7px; color: var(--soft); text-transform: uppercase; margin-top: -5px; }
+.item-title { display: block; font-size: 11px; color: var(--ink); font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-subtitle { display: block; font-size: 9px; color: var(--soft); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.money { font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 750; color: var(--navy-900); }
+.status-pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 24px; width: fit-content; padding: 0 8px; border-radius: 999px; font-size: 8px; font-weight: 850; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+.status-pill::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.status-overdue { background: var(--red-100); color: var(--red-700); }
+.status-soon { background: var(--orange-100); color: var(--orange-700); }
+.status-attention { background: var(--yellow-100); color: var(--yellow-700); }
+.status-regular { background: var(--green-100); color: var(--green-700); }
+.status-internal { background: #e8edf2; color: #5f6d7c; }
+
+.occupancy-layout { display: grid; grid-template-columns: minmax(0, 1fr) 190px; gap: 20px; align-items: center; }
+.room-grid { display: grid; grid-template-columns: repeat(8, minmax(40px, 1fr)); gap: 7px; }
+.room-cell { border: 1px solid #dbe4ed; background: #f8fbfd; color: var(--navy-900); border-radius: 8px; min-height: 42px; padding: 6px 4px; display: grid; place-items: center; text-align: center; transition: .16s ease; }
+.room-cell:hover { border-color: var(--blue-500); transform: translateY(-2px); box-shadow: 0 6px 14px rgba(37,99,235,.12); }
+.room-cell strong { font-size: 10px; }
+.room-cell span { max-width: 100%; font-size: 7px; color: var(--soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.room-cell.risk { background: #fff5f5; border-color: #f2c7c7; color: var(--red-700); }
+.room-cell.soon { background: #fff8ef; border-color: #f2d6b6; color: var(--orange-700); }
+.room-cell.internal { background: #f0f2f5; border-style: dashed; color: #667487; }
+
+.donut-wrap { display: grid; place-items: center; gap: 12px; }
+.donut { --rooms: 51.2%; position: relative; width: 112px; aspect-ratio: 1; border-radius: 50%; background: conic-gradient(var(--blue-600) 0 var(--rooms), #72c9a0 var(--rooms) 100%); display: grid; place-items: center; }
+.donut::after { content: ""; position: absolute; width: 68%; aspect-ratio: 1; border-radius: 50%; background: #fff; }
+.donut-center { position: relative; z-index: 1; text-align: center; }
+.donut-center strong { display: block; font-size: 16px; }
+.donut-center span { display: block; color: var(--soft); font-size: 7px; }
+.legend { width: 100%; display: grid; gap: 7px; }
+.legend-row { display: flex; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 9px; }
+.legend-label { display: inline-flex; align-items: center; gap: 6px; }
+.legend-dot { width: 7px; height: 7px; border-radius: 2px; }
+
+.task-list { display: grid; gap: 9px; }
+.task-item { display: grid; grid-template-columns: 28px 1fr auto; gap: 9px; align-items: start; padding: 10px; border: 1px solid var(--line); border-radius: 10px; }
+.task-number { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 8px; background: var(--blue-50); color: var(--blue-600); font-size: 9px; font-weight: 850; }
+.task-item strong { display: block; font-size: 10px; }
+.task-item p { color: var(--soft); font-size: 8px; line-height: 1.45; margin: 3px 0 0; }
+.task-count { color: var(--soft); font-size: 8px; padding-top: 5px; }
+
+.toolbar { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; padding: 13px 15px; border-bottom: 1px solid var(--line); }
+.toolbar-search { min-width: 230px; flex: 1; height: 36px; display: flex; align-items: center; gap: 8px; padding: 0 10px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--soft); }
+.toolbar-search svg { width: 15px; height: 15px; }
+.toolbar-search input { width: 100%; border: 0; outline: 0; font-size: 10px; color: var(--ink); }
+.select { height: 36px; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); padding: 0 28px 0 10px; font-size: 10px; font-weight: 650; }
+.view-toggle { display: flex; padding: 3px; border: 1px solid var(--line); border-radius: 9px; }
+.view-toggle button { width: 29px; height: 28px; border: 0; border-radius: 6px; background: transparent; color: var(--soft); display: grid; place-items: center; }
+.view-toggle button.active { color: var(--blue-600); background: var(--blue-50); }
+.view-toggle svg { width: 14px; height: 14px; }
+
+.data-table-wrap { overflow: auto; }
+.data-table { width: 100%; border-collapse: collapse; min-width: 930px; }
+.data-table th { text-align: left; padding: 10px 14px; background: #f8fafc; color: var(--soft); font-size: 8px; text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); }
+.data-table td { padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 10px; vertical-align: middle; }
+.data-table tr { transition: .14s ease; }
+.data-table tbody tr:hover { background: #f9fbfd; }
+.clickable-row { cursor: pointer; }
+.type-badge { color: var(--muted); display: inline-flex; align-items: center; gap: 6px; }
+.type-badge svg { width: 14px; height: 14px; color: var(--blue-600); }
+.date-cell strong { display: block; font-size: 10px; color: var(--ink); }
+.date-cell span { display: block; font-size: 8px; color: var(--soft); margin-top: 3px; }
+
+.property-cards { padding: 14px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.property-card { border: 1px solid var(--line); border-radius: 13px; background: #fff; padding: 14px; text-align: left; transition: .16s ease; }
+.property-card:hover { transform: translateY(-2px); border-color: #cbd8e6; box-shadow: 0 10px 25px rgba(12,34,54,.08); }
+.property-card-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.property-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: var(--blue-50); color: var(--blue-600); }
+.property-icon svg { width: 17px; height: 17px; }
+.property-card h3 { font-size: 12px; margin: 12px 0 3px; color: var(--navy-950); }
+.property-card .tenant { color: var(--muted); font-size: 9px; min-height: 13px; }
+.property-card-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 13px; padding-top: 12px; border-top: 1px solid var(--line); }
+.small-stat span { display: block; color: var(--soft); font-size: 7px; text-transform: uppercase; letter-spacing: .05em; }
+.small-stat strong { display: block; color: var(--ink); font-size: 10px; margin-top: 3px; }
+.empty-state { padding: 60px 20px; text-align: center; color: var(--muted); }
+.empty-state-icon { width: 52px; height: 52px; margin: 0 auto 12px; border-radius: 15px; background: #f0f4f8; display: grid; place-items: center; }
+.empty-state-icon svg { width: 23px; height: 23px; }
+.empty-state h3 { margin: 0; font-size: 14px; color: var(--ink); }
+.empty-state p { margin: 6px 0 0; font-size: 10px; }
+
+.agenda-sections { display: grid; gap: 18px; }
+.agenda-section-header { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
+.agenda-section-header h2 { font-size: 13px; margin: 0; }
+.agenda-section-header span { color: var(--soft); font-size: 9px; }
+.agenda-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.agenda-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 13px; display: grid; grid-template-columns: 42px 1fr; gap: 11px; transition: .15s ease; text-align: left; }
+.agenda-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.agenda-calendar { height: 44px; border-radius: 10px; background: #f2f5f8; display: grid; place-items: center; line-height: 1; }
+.agenda-calendar strong { font-size: 15px; }
+.agenda-calendar span { color: var(--soft); font-size: 7px; text-transform: uppercase; margin-top: -7px; }
+.agenda-card h3 { font-size: 11px; margin: 1px 0 3px; color: var(--navy-950); }
+.agenda-card p { font-size: 8px; margin: 0 0 8px; color: var(--soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.timeline { position: relative; display: grid; gap: 0; }
+.timeline::before { content: ""; position: absolute; top: 8px; bottom: 8px; left: 20px; width: 1px; background: var(--line); }
+.timeline-item { position: relative; display: grid; grid-template-columns: 41px 105px 1fr auto; gap: 13px; align-items: start; padding: 10px 0; }
+.timeline-dot { z-index: 1; width: 10px; height: 10px; margin: 5px auto 0; border-radius: 50%; background: var(--blue-600); box-shadow: 0 0 0 5px var(--blue-50); }
+.timeline-date { color: var(--soft); font-size: 9px; padding-top: 3px; }
+.timeline-content strong { font-size: 10px; }
+.timeline-content p { color: var(--muted); font-size: 9px; line-height: 1.5; margin: 4px 0 0; }
+
+.document-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.document-category { background: #fff; border: 1px solid var(--line); border-radius: 13px; padding: 15px; }
+.document-category .doc-icon { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: var(--blue-50); color: var(--blue-600); }
+.document-category .doc-icon svg { width: 18px; height: 18px; }
+.document-category h3 { font-size: 11px; margin: 12px 0 4px; }
+.document-category p { min-height: 30px; color: var(--soft); font-size: 8px; line-height: 1.45; margin: 0; }
+.document-category .doc-foot { margin-top: 13px; padding-top: 11px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; color: var(--soft); font-size: 8px; }
+
+.roadmap { display: grid; gap: 9px; }
+.roadmap-item { display: grid; grid-template-columns: 34px 1fr auto; gap: 11px; align-items: center; padding: 12px; border: 1px solid var(--line); border-radius: 11px; }
+.roadmap-step { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: var(--blue-50); color: var(--blue-600); font-size: 10px; font-weight: 850; }
+.roadmap-item strong { display: block; font-size: 10px; }
+.roadmap-item p { color: var(--soft); font-size: 8px; margin: 3px 0 0; }
+.roadmap-status { font-size: 8px; font-weight: 800; color: var(--blue-600); background: var(--blue-50); border-radius: 999px; padding: 5px 8px; }
+
+.drawer-backdrop { position: fixed; inset: 0; background: rgba(8, 27, 43, .35); backdrop-filter: blur(2px); z-index: 39; }
+.property-drawer { position: fixed; inset: 0 0 0 auto; width: min(620px, 94vw); background: #fff; z-index: 40; box-shadow: var(--shadow-lg); transform: translateX(105%); transition: transform .25s ease; overflow-y: auto; }
+.property-drawer.open { transform: translateX(0); }
+.drawer-header { padding: 22px 24px 18px; background: linear-gradient(145deg, var(--navy-950), var(--navy-800)); color: #fff; }
+.drawer-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+.drawer-header .eyebrow { color: #8cb6ff; }
+.drawer-header h2 { font-size: 23px; letter-spacing: -.025em; margin: 6px 0 4px; }
+.drawer-header p { margin: 0; color: #b6c5d4; font-size: 10px; }
+.drawer-header .icon-button { color: #c8d3df; }
+.drawer-header .icon-button:hover { background: rgba(255,255,255,.1); color: #fff; }
+.drawer-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 18px; }
+.drawer-stat { padding: 10px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1); border-radius: 9px; }
+.drawer-stat span { display: block; color: #9eb1c5; font-size: 7px; text-transform: uppercase; letter-spacing: .06em; }
+.drawer-stat strong { display: block; margin-top: 4px; font-size: 11px; }
+.drawer-body { padding: 20px 24px 30px; display: grid; gap: 18px; }
+.drawer-section { border-bottom: 1px solid var(--line); padding-bottom: 18px; }
+.drawer-section:last-child { border: 0; }
+.drawer-section-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.drawer-section-title h3 { font-size: 12px; margin: 0; color: var(--navy-950); }
+.info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+.info-item { padding: 10px; background: #f7f9fb; border-radius: 9px; }
+.info-item span { display: block; color: var(--soft); font-size: 7px; text-transform: uppercase; letter-spacing: .05em; }
+.info-item strong { display: block; font-size: 10px; margin-top: 4px; line-height: 1.35; }
+.next-step-list { display: grid; gap: 7px; }
+.next-step { display: flex; gap: 9px; align-items: flex-start; padding: 9px 10px; border: 1px solid var(--line); border-radius: 9px; }
+.next-step-check { width: 17px; height: 17px; flex: 0 0 auto; border-radius: 5px; border: 1.5px solid #cbd5df; margin-top: 1px; }
+.next-step strong { display: block; font-size: 9px; }
+.next-step p { color: var(--soft); font-size: 8px; margin: 3px 0 0; line-height: 1.4; }
+.notes-box { padding: 11px; background: #fff9ed; border: 1px solid #f4dfb3; color: #745419; border-radius: 9px; font-size: 9px; line-height: 1.55; }
+.source-link { color: var(--blue-600); font-size: 9px; font-weight: 700; text-decoration: none; }
+.source-link:hover { text-decoration: underline; }
+
+.modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(8, 27, 43, .4); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 18px; }
+.modal { width: min(470px, 100%); border-radius: 16px; background: #fff; box-shadow: var(--shadow-lg); overflow: hidden; }
+.modal-header { padding: 18px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 15px; }
+.modal-header h2 { font-size: 17px; margin: 5px 0 0; }
+.modal-form { padding: 18px 20px 20px; display: grid; gap: 14px; }
+.modal-form label { display: grid; gap: 6px; color: var(--muted); font-size: 9px; font-weight: 700; }
+.modal-form select, .modal-form textarea { width: 100%; border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); padding: 10px; font-size: 10px; resize: vertical; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 3px; }
+
+.toast-region { position: fixed; right: 18px; bottom: 18px; z-index: 70; display: grid; gap: 8px; }
+.toast { width: min(340px, calc(100vw - 36px)); background: var(--navy-950); color: #fff; border-radius: 11px; padding: 12px 14px; box-shadow: var(--shadow-lg); display: flex; gap: 10px; align-items: flex-start; animation: toast-in .22s ease; }
+.toast svg { width: 17px; height: 17px; flex: 0 0 auto; color: #7dd3a8; }
+.toast strong { display: block; font-size: 10px; }
+.toast span { display: block; color: #b6c4d2; font-size: 8px; margin-top: 3px; line-height: 1.4; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(10px); } }
+
+@media (max-width: 1180px) {
+  .metrics-grid { grid-template-columns: repeat(2, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .property-cards, .agenda-cards { grid-template-columns: repeat(2, 1fr); }
+  .document-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 880px) {
+  .sidebar { transform: translateX(-103%); transition: transform .22s ease; box-shadow: var(--shadow-lg); }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-left: 0; }
+  .mobile-menu { display: grid; }
+  .topbar { padding: 0 16px; }
+  .profile > div:last-child, kbd { display: none; }
+  .profile { padding-left: 0; border: 0; }
+  .page-container { padding: 22px 16px; }
+  .occupancy-layout { grid-template-columns: 1fr; }
+  .donut-wrap { grid-template-columns: 120px 1fr; }
+  .room-grid { grid-template-columns: repeat(6, 1fr); }
+  .alert-row { grid-template-columns: 38px minmax(110px, 1fr) 100px 22px; }
+  .alert-row > :nth-child(3), .alert-row > :nth-child(5) { display: none; }
+}
+
+@media (max-width: 620px) {
+  .topbar-actions { gap: 4px; }
+  .global-search { width: auto; flex: 1; }
+  .page-heading { display: grid; }
+  .heading-actions { justify-content: flex-start; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 9px; }
+  .metric-card { padding: 13px; }
+  .metric-value { font-size: 20px; }
+  .property-cards, .agenda-cards, .document-grid { grid-template-columns: 1fr; }
+  .property-cards { padding: 10px; }
+  .room-grid { grid-template-columns: repeat(4, 1fr); }
+  .toolbar { align-items: stretch; }
+  .toolbar-search { min-width: 100%; }
+  .select { flex: 1; min-width: 120px; }
+  .timeline-item { grid-template-columns: 32px 1fr auto; }
+  .timeline-date { grid-column: 2; grid-row: 1; }
+  .timeline-content { grid-column: 2; }
+  .timeline-item .button { grid-column: 3; grid-row: 1 / span 2; }
+  .timeline::before { left: 15px; }
+  .drawer-summary, .info-grid { grid-template-columns: 1fr; }
+  .drawer-header, .drawer-body { padding-left: 17px; padding-right: 17px; }
+}
+
+[hidden] { display: none !important; }
+
+</style>
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" id="sidebar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">EV</div>
+          <div>
+            <strong>Espaço VIP</strong>
+            <span>Gestão de imóveis</span>
+          </div>
+        </div>
+
+        <nav class="main-nav" aria-label="Navegação principal">
+          <button class="nav-item active" data-view="dashboard">
+            <span class="nav-icon" data-icon="dashboard"></span>
+            <span>Visão geral</span>
+          </button>
+          <button class="nav-item" data-view="properties">
+            <span class="nav-icon" data-icon="building"></span>
+            <span>Imóveis</span>
+            <span class="nav-count" id="propertyNavCount">36</span>
+          </button>
+          <button class="nav-item" data-view="agenda">
+            <span class="nav-icon" data-icon="calendar"></span>
+            <span>Agenda</span>
+            <span class="nav-alert" id="agendaNavCount">9</span>
+          </button>
+          <button class="nav-item" data-view="history">
+            <span class="nav-icon" data-icon="history"></span>
+            <span>Histórico</span>
+          </button>
+          <button class="nav-item" data-view="documents">
+            <span class="nav-icon" data-icon="folder"></span>
+            <span>Documentos</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-footer">
+          <div class="sync-card">
+            <span class="sync-dot"></span>
+            <div>
+              <strong>Base consolidada</strong>
+              <span>Atualizada em 14/08/2026</span>
+            </div>
+          </div>
+          <button class="nav-item" data-view="settings">
+            <span class="nav-icon" data-icon="settings"></span>
+            <span>Configurações</span>
+          </button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <button class="icon-button mobile-menu" id="mobileMenu" aria-label="Abrir menu">
+            <span data-icon="menu"></span>
+          </button>
+          <div class="global-search">
+            <span data-icon="search"></span>
+            <input id="globalSearch" type="search" placeholder="Buscar imóvel, sala ou inquilino..." autocomplete="off" />
+            <kbd>⌘ K</kbd>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-button notification-button" aria-label="Notificações" data-open-agenda>
+              <span data-icon="bell"></span>
+              <span class="notification-dot"></span>
+            </button>
+            <div class="profile">
+              <div class="avatar">EV</div>
+              <div>
+                <strong>Administração</strong>
+                <span>Espaço VIP</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div id="app" class="page-container" aria-live="polite"></div>
+      </main>
+    </div>
+
+    <div class="drawer-backdrop" id="drawerBackdrop" hidden></div>
+    <aside class="property-drawer" id="propertyDrawer" aria-label="Detalhes do imóvel" aria-hidden="true"></aside>
+
+    <div class="modal-backdrop" id="modalBackdrop" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-header">
+          <div>
+            <span class="eyebrow">Novo registro</span>
+            <h2 id="modalTitle">Adicionar acompanhamento</h2>
+          </div>
+          <button class="icon-button" id="closeModal" aria-label="Fechar"><span data-icon="close"></span></button>
+        </div>
+        <form id="activityForm" class="modal-form">
+          <input type="hidden" id="activityPropertyId" />
+          <label>
+            Tipo de registro
+            <select id="activityType" required>
+              <option value="Contato">Contato com inquilino</option>
+              <option value="Reajuste">Andamento do reajuste</option>
+              <option value="Pagamento">Pagamento</option>
+              <option value="Contrato">Contrato</option>
+              <option value="Documento">Documento</option>
+              <option value="Observação">Observação</option>
+            </select>
+          </label>
+          <label>
+            Descrição
+            <textarea id="activityDescription" rows="4" placeholder="Ex.: Notificação de reajuste enviada pelo WhatsApp" required></textarea>
+          </label>
+          <div class="modal-actions">
+            <button type="button" class="button secondary" id="cancelModal">Cancelar</button>
+            <button type="submit" class="button primary"><span data-icon="check"></span> Salvar registro</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="toast-region" id="toastRegion" aria-live="assertive"></div>
+    <script>
+const SOURCE_UPDATED_AT = "2026-08-14";
+
+const registro = "https://docs.google.com/spreadsheets/d/1PwxvksoQBEMLqJz7YRI-le1V_5KGEyxTnWF1d4fFWxM/edit";
+const reajustes = "https://docs.google.com/spreadsheets/d/1q9aTGZBxUk_YUcW5Rymf23i3wjjTNKQiB2NmL56Suzs/edit";
+const base = "https://docs.google.com/spreadsheets/d/1oIcqBLC8_dulz5sROnp03ylfCXn_Qaa2yUucH_GC65g/edit";
+
+const room = (number, tenant, rent, lastEvent, lastDate, nextAdjustment, extra = {}) => ({
+  id: `sala-${String(number).padStart(2, "0")}`,
+  code: `Sala ${String(number).padStart(2, "0")}`,
+  shortCode: String(number).padStart(2, "0"),
+  type: "Sala",
+  group: "Espaço VIP",
+  address: "Espaço VIP",
+  tenant,
+  occupancy: "Locado",
+  rent,
+  lastEvent,
+  lastDate,
+  nextAdjustment,
+  source: registro,
+  billing: "Mensal",
+  charges: "Condomínio à parte",
+  contractStatus: "Ativo",
+  ...extra,
+});
+
+const external = (id, code, tenant, rent, lastEvent, lastDate, nextAdjustment, extra = {}) => ({
+  id,
+  code,
+  shortCode: code,
+  type: "Imóvel externo",
+  group: "Casas e comerciais",
+  address: code,
+  tenant,
+  occupancy: "Locado",
+  rent,
+  lastEvent,
+  lastDate,
+  nextAdjustment,
+  source: reajustes,
+  billing: "Mensal",
+  charges: "Verificar IPTU",
+  contractStatus: "Ativo",
+  ...extra,
+});
+
+const properties = [
+  room(1, "Carol Malta", 1400, "Reajuste", "2025-09-01", "2026-09-01", {
+    billing: "Semestral",
+    source: registro,
+    notes: "Aluguel equivalente a R$ 1.400/mês, pago semestralmente. A data contratual e o calendário operacional devem ser reconciliados.",
+    history: [
+      { date: "2025-08-01", title: "Mudança para a Sala 01", description: "Carol Malta deixou a Sala 09 e passou a ocupar a Sala 01." },
+      { date: "2025-09-01", title: "Último reajuste registrado", description: "Data utilizada pelo calendário operacional." },
+    ],
+  }),
+  room(2, "Maria Angélica", 900, "Reajuste", "2026-04-01", "2027-04-01", {
+    billing: "Anual",
+    referenceRent: 2050,
+    source: reajustes,
+    notes: "Valor equivalente do plano anual. Referência integral da notificação: R$ 2.050.",
+  }),
+  room(3, "Adrielle e Carol Dias", 850, "Data operacional", "2025-08-21", "2026-08-21", {
+    notes: "O valor do reajuste de 2025 não está registrado com clareza.",
+  }),
+  room(4, "Vivian", 700, "Reajuste", "2025-09-05", "2026-09-05", { source: reajustes }),
+  room(5, "Drielle", 800, "Início do contrato", "2026-06-08", "2027-06-08", {
+    source: base,
+    history: [
+      { date: null, title: "Heliodoro ocupou a sala", description: "Primeiro registro histórico conhecido da Sala 05." },
+      { date: null, title: "Moriza ocupou a sala", description: "Depois, Moriza mudou-se para a Sala 16." },
+      { date: "2026-06-08", title: "Entrada de Drielle", description: "Início do contrato atual." },
+    ],
+  }),
+  {
+    ...room(6, "Karen", 0, "Uso interno", null, null),
+    occupancy: "Uso interno",
+    currentUse: "CEO da Espaço VIP",
+    charges: "Não se aplica",
+    contractStatus: "Não se aplica",
+    notes: "Sala utilizada por Karen, CEO da Espaço VIP.",
+  },
+  room(7, "V4", 800, "Reajuste", "2026-04-23", "2027-04-23", {
+    referenceRent: 1390,
+    source: reajustes,
+    notes: "Valor integral notificado: R$ 1.390; condomínio cobrado à parte.",
+  }),
+  room(8, "Iasmin Cristina", 750, "Início do contrato", "2025-12-10", "2026-12-10", {
+    source: base,
+    history: [
+      { date: null, title: "Saída de Alessandra", description: "Alessandra deixou de ser inquilina da Sala 08." },
+      { date: "2025-12-10", title: "Entrada de Iasmin", description: "Início da locação atual." },
+    ],
+  }),
+  room(9, "Caroline Oliveira", 1000, "Início do contrato", "2025-08-26", "2026-08-26", {
+    source: base,
+    history: [
+      { date: null, title: "Carol Malta ocupou a sala", description: "Carol mudou-se posteriormente para a Sala 01." },
+      { date: "2025-08-26", title: "Entrada de Caroline", description: "Início da locação atual." },
+    ],
+  }),
+  room(10, "Marcello", 850, "Notificação", "2026-04-20", "2027-04-10", {
+    referenceRent: 1630,
+    notes: "Revisar divergência: a planilha indica 10/04/2027, mas a notificação é de 20/04/2026 e menciona outro nome internamente.",
+  }),
+  room(11, "Rafaela Castro / Florindo", 850, "Início do contrato", "2025-09-22", "2026-09-22", { source: base }),
+  room(12, "Danilo Alves", 650, "Reajuste", "2025-08-06", "2026-08-06", {
+    source: reajustes,
+    notes: "Reajuste anual vencido em relação à data-base de 14/08/2026.",
+  }),
+  room(13, "Miriam Leonart", 650, "Reajuste", "2025-11-15", "2026-11-15", {
+    notes: "Data inferida pela observação de aumento em 15/11.",
+  }),
+  room(14, "Lauro / INVI", 700, "Reajuste", "2025-08-16", "2026-08-16", { source: reajustes }),
+  room(15, "Kenia Karine", 920, "Reajuste", "2026-02-22", "2027-02-22", {
+    billing: "Semestral",
+    referenceRent: 1217,
+    source: reajustes,
+    notes: "Equivalente mensal do plano semestral de R$ 5.520. Referência integral: R$ 1.217.",
+  }),
+  room(16, "Moriza", 750, "Início do contrato", "2026-01-05", "2027-01-05", {
+    source: base,
+    history: [
+      { date: null, title: "Marina e Vanessa ocuparam a sala", description: "Vanessa entregou a sala e Marina mudou-se para a Sala 17." },
+      { date: "2026-01-05", title: "Entrada de Moriza", description: "Moriza mudou-se da Sala 05 para a Sala 16." },
+    ],
+  }),
+  room(17, "Marina Arantes", 950, "Início do contrato", "2026-02-15", "2027-02-15", {
+    source: base,
+    history: [
+      { date: null, title: "Lorena ocupou a sala", description: "Locação anterior à ocupação atual." },
+      { date: "2026-02-15", title: "Entrada de Marina", description: "Marina mudou-se da Sala 16 para a Sala 17." },
+    ],
+  }),
+  room(18, "Léa Gomes", 870, "Reajuste", "2025-06-25", "2026-06-25", {
+    billing: "Semestral",
+    notes: "Valor equivalente mensal. Não foi localizado reajuste posterior.",
+  }),
+  {
+    ...room(19, "Espaço VIP", 0, "Uso eventual", null, null),
+    occupancy: "Uso interno",
+    currentUse: "Estúdio de podcast",
+    charges: "Locação eventual por hora",
+    contractStatus: "Não se aplica",
+    notes: "Sala de podcast utilizada internamente e alugada por hora eventualmente.",
+  },
+  room(20, "Heliodoro", 750, "Data operacional", "2025-11-15", "2026-11-15", {
+    notes: "Heliodoro chegou a ocupar as salas 05 e 20; atualmente permanece somente na Sala 20.",
+    history: [
+      { date: null, title: "Expansão para duas salas", description: "Heliodoro passou a ocupar as salas 05 e 20." },
+      { date: null, title: "Devolução da Sala 05", description: "Permaneceu somente na Sala 20." },
+    ],
+  }),
+  room(21, "Stone / CEM Soluções", 1775, "Reajuste", "2025-11-01", "2026-11-01", {
+    billing: "Contrato conjunto 21/22",
+    referenceRent: 2009,
+    source: reajustes,
+    notes: "Metade gerencial do contrato conjunto. Total mensal das salas 21/22: R$ 3.550.",
+  }),
+  room(22, "Stone / CEM Soluções", 1775, "Reajuste", "2025-11-01", "2026-11-01", {
+    billing: "Contrato conjunto 21/22",
+    referenceRent: 2009,
+    source: reajustes,
+    notes: "Metade gerencial do contrato conjunto. Total mensal das salas 21/22: R$ 3.550.",
+  }),
+  {
+    ...room(23, "Espaço VIP", 0, "Uso interno", null, null),
+    occupancy: "Uso interno",
+    currentUse: "Administração e arquivo",
+    charges: "Não se aplica",
+    contractStatus: "Não se aplica",
+    notes: "Pequena sala destinada aos documentos e à administração da Espaço VIP.",
+  },
+
+  external("av-paranaiba-3057", "Av. Paranaíba, 3.057", "Pedro Maia / Maia Móveis", 2100, "Reajuste", "2026-06-01", "2027-06-01", {
+    referenceRent: 2343,
+    iptu: 177.90,
+    notes: "Aluguel com desconto. IPTU mensal registrado em R$ 177,90.",
+  }),
+  external("av29-r18-1449", "Av. 29/Rua 18, 1.449", "Maria Augusta", 1100, "Reajuste", "2026-04-02", "2027-04-02", {
+    referenceRent: 1467,
+    notes: "O título do arquivo diverge, mas o conteúdo indica vigência em 02/04/2026.",
+  }),
+  external("av29-r18-1451", "Av. 29/Rua 18, 1.451", "Ana Carolina", 1100, "Reajuste", "2026-06-05", "2027-06-05", {
+    referenceRent: 1510,
+    iptu: 129.64,
+  }),
+  external("av21-r32-1726", "Av. 21/Rua 32, 1.726", "Walisson", 1350, "Reajuste", "2026-06-05", "2027-06-05", {
+    referenceRent: 1681,
+    iptu: 137.87,
+  }),
+  external("av29-r18-1447", "Av. 29/Rua 18, 1.447", "Sandra / Kassandra", 1100, "Reajuste", "2025-11-10", "2026-11-10", {
+    source: registro,
+    notes: "Valor integral pós-reajuste não localizado com segurança.",
+  }),
+  external("av23-1981-ap402", "Av. 23, 1.981, ap. 402", "Helena", 1700, "Reajuste", "2026-06-10", "2027-06-10", { referenceRent: 1978 }),
+  external("av-paranaiba-3389", "Av. Paranaíba, 3.389", "Carlos / Brena / Jaine", 1550, "Reajuste", "2025-12-10", "2026-12-10", { source: registro }),
+  external("rua14-av29-781", "Rua 14/Av. 29, nº 781", "Onelzides", 1050, "Reajuste", "2026-06-14", "2027-06-14", { referenceRent: 1177 }),
+  external("av21-r22-1415", "Av. 21/Rua 22, nº 1.415", "Paulo", 1800, "Reajuste", "2026-06-15", "2027-06-15", {
+    referenceRent: 2827,
+    iptu: 403.52,
+    notes: "Endereço confirmado. IPTU mensal registrado em R$ 403,52.",
+  }),
+  external("rua14-av29-31-787", "Rua 14/Av. 29/31, nº 787", "Marlene", 1050, "Reajuste", "2026-06-17", "2027-06-17", {
+    referenceRent: 1279,
+    iptu: 101.10,
+  }),
+  external("rua14-av29-783", "Rua 14/Av. 29, nº 783", "Deila / Vanildo", 1190, "Início do contrato", "2025-08-21", "2026-08-21", { source: base }),
+  external("av21-r32-863", "Av. 21/Rua 32, nº 863", "Joana", 1400, "Reajuste", "2025-11-30", "2026-11-30", { source: registro }),
+  external("rua14-av29-31-785", "Rua 14/Av. 29/31, nº 785", "Letícia / Celda / Celso", 1300, "Início do contrato", "2026-06-15", "2027-06-15", {
+    source: base,
+    notes: "Contrato atual iniciado após a saída da Simone.",
+    history: [
+      { date: null, title: "Simone ocupou o imóvel", description: "Inquilina anterior do imóvel nº 785." },
+      { date: "2026-06-15", title: "Entrada de Letícia / Celda / Celso", description: "Início do contrato atual." },
+    ],
+  }),
+];
+
+const knownHistory = properties.flatMap((property) => {
+  const items = property.history ? [...property.history] : [];
+  if (property.lastDate && !items.some((item) => item.date === property.lastDate && item.title.includes(property.lastEvent))) {
+    items.push({
+      date: property.lastDate,
+      title: property.lastEvent,
+      description: `${property.lastEvent} registrado para ${property.tenant}.`,
+    });
+  }
+  return items.map((item) => ({ ...item, propertyId: property.id, propertyCode: property.code }));
+});
+
+const sourceLinks = { registro, reajustes, base };
+
+const app = document.querySelector("#app");
+const drawer = document.querySelector("#propertyDrawer");
+const drawerBackdrop = document.querySelector("#drawerBackdrop");
+const modalBackdrop = document.querySelector("#modalBackdrop");
+const sidebar = document.querySelector("#sidebar");
+
+const icons = {
+  dashboard: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 4h6v6H4zM14 4h6v9h-6zM4 14h6v6H4zM14 17h6v3h-6z" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  building: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 20V4h10v16M15 9h4v11M3 20h18M8 8h4M8 12h4M8 16h4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  home: '<svg viewBox="0 0 24 24" fill="none"><path d="m3 11 9-7 9 7M5 10v10h14V10M9 20v-6h6v6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  calendar: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 4v3M19 4v3M4 9h16M5 6h14a1 1 0 0 1 1 1v13H4V7a1 1 0 0 1 1-1Z" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  history: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 12a8 8 0 1 0 2.34-5.66L4 8.68M4 4v4.68h4.68M12 8v5l3 2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  folder: '<svg viewBox="0 0 24 24" fill="none"><path d="M3 6h7l2 2h9v11H3z" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  settings: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" stroke-width="1.8"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.08a1.7 1.7 0 0 0-1.03-1.56 1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15 1.7 1.7 0 0 0 3 14H3v-4h.08A1.7 1.7 0 0 0 4.64 9a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.63 1.7 1.7 0 0 0 10 3.07V3h4v.08A1.7 1.7 0 0 0 15 4.64a1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.37 9 1.7 1.7 0 0 0 20.93 10H21v4h-.08A1.7 1.7 0 0 0 19.4 15Z" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke-width="1.8"/><path d="m16.3 16.3 4 4" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  bell: '<svg viewBox="0 0 24 24" fill="none"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  menu: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  close: '<svg viewBox="0 0 24 24" fill="none"><path d="m6 6 12 12M18 6 6 18" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  chevron: '<svg viewBox="0 0 24 24" fill="none"><path d="m9 6 6 6-6 6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  download: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  grid: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z" stroke-width="1.8"/></svg>',
+  list: '<svg viewBox="0 0 24 24" fill="none"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01" stroke-width="2" stroke-linecap="round"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 4 3 20h18L12 4Z" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 9v5M12 17h.01" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  money: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke-width="1.8"/><path d="M8 12h.01M16 12h.01M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  users: '<svg viewBox="0 0 24 24" fill="none"><path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 20v-2a4 4 0 0 0-3-3.87M16 2.13a4 4 0 0 1 0 7.75" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  file: '<svg viewBox="0 0 24 24" fill="none"><path d="M6 3h8l4 4v14H6zM14 3v5h5M9 13h6M9 17h6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4L19 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-5-5 5 5-5 5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  filter: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  info: '<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke-width="1.8"/><path d="M12 11v6M12 7h.01" stroke-width="1.8" stroke-linecap="round"/></svg>',
+  external: '<svg viewBox="0 0 24 24" fill="none"><path d="M14 4h6v6M20 4l-9 9M19 13v7H4V5h7" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+};
+
+function hydrateIcons(root = document) {
+  root.querySelectorAll("[data-icon]").forEach((node) => {
+    const icon = icons[node.dataset.icon];
+    if (icon) node.innerHTML = icon;
+  });
+}
+
+const state = {
+  view: "dashboard",
+  propertyLayout: "table",
+  query: "",
+  type: "Todos",
+  occupancy: "Todos",
+  adjustment: "Todos",
+};
+
+const activityKey = "espacoVipPropertyActivities";
+let activities = JSON.parse(localStorage.getItem(activityKey) || "[]");
+
+const today = new Date();
+today.setHours(12, 0, 0, 0);
+
+const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+const fullCurrency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 2 });
+const dateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+const shortDateFormatter = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" });
+
+function parseDate(value) {
+  if (!value) return null;
+  return new Date(`${value}T12:00:00`);
+}
+
+function formatDate(value) {
+  const date = parseDate(value);
+  return date ? dateFormatter.format(date) : "Não se aplica";
+}
+
+function daysUntil(value) {
+  const date = parseDate(value);
+  if (!date) return null;
+  return Math.round((date - today) / 86400000);
+}
+
+function adjustmentMeta(property) {
+  const days = daysUntil(property.nextAdjustment);
+  if (days === null) return { key: "internal", label: "Não se aplica", className: "status-internal", days };
+  if (days < 0) return { key: "overdue", label: "Atrasado", className: "status-overdue", days };
+  if (days <= 30) return { key: "soon", label: "Próximo", className: "status-soon", days };
+  if (days <= 60) return { key: "attention", label: "Atenção", className: "status-attention", days };
+  return { key: "regular", label: "Regular", className: "status-regular", days };
+}
+
+function relativeDays(days) {
+  if (days === null) return "Sem data";
+  if (days < 0) return `${Math.abs(days)} dias atrasado`;
+  if (days === 0) return "Hoje";
+  if (days === 1) return "Amanhã";
+  return `Em ${days} dias`;
+}
+
+function statusPill(meta) {
+  return `<span class="status-pill ${meta.className}">${meta.label}</span>`;
+}
+
+function heading(eyebrow, title, text, actions = "") {
+  return `<section class="page-heading">
+    <div><span class="eyebrow">${eyebrow}</span><h1>${title}</h1><p>${text}</p></div>
+    <div class="heading-actions">${actions}</div>
+  </section>`;
+}
+
+function getPriorityProperties(limit = Infinity) {
+  return properties
+    .map((property) => ({ property, meta: adjustmentMeta(property) }))
+    .filter(({ meta }) => ["overdue", "soon", "attention"].includes(meta.key))
+    .sort((a, b) => a.meta.days - b.meta.days)
+    .slice(0, limit);
+}
+
+function getNextSteps(property) {
+  const meta = adjustmentMeta(property);
+  if (meta.key === "internal") {
+    return [
+      ["Revisar finalidade da unidade", "Mantenha registrado o uso interno e o responsável pela sala."],
+      ["Organizar documentos", "Associe fotos, inventário ou documentos administrativos à unidade."],
+    ];
+  }
+  if (meta.key === "overdue") {
+    return [
+      ["Conferir cláusula de reajuste", "Validar índice, aniversário e condições previstas no contrato atual."],
+      ["Calcular o novo valor", "Registrar valor integral, desconto praticado e vigência."],
+      ["Emitir e enviar a notificação", "Gerar documento e registrar data/canal de envio ao inquilino."],
+    ];
+  }
+  if (meta.key === "soon" || meta.key === "attention") {
+    return [
+      ["Revisar contrato e índice", `O reajuste está previsto para ${formatDate(property.nextAdjustment)}.`],
+      ["Preparar simulação", "Calcular antecipadamente o novo valor integral e as opções de desconto."],
+      ["Programar comunicação", "Preparar a notificação para envio antes da vigência."],
+    ];
+  }
+  return [
+    ["Manter acompanhamento", `Próxima revisão prevista para ${formatDate(property.nextAdjustment)}.`],
+    ["Completar documentos", "Anexar contrato, comprovantes e notificações ao cadastro."],
+  ];
+}
+
+function renderDashboard() {
+  const rented = properties.filter((p) => p.occupancy === "Locado").length;
+  const monthlyRevenue = properties.reduce((sum, p) => sum + p.rent, 0);
+  const overdue = properties.filter((p) => adjustmentMeta(p).key === "overdue").length;
+  const priorities = getPriorityProperties();
+  const roomsRevenue = properties.filter((p) => p.type === "Sala").reduce((sum, p) => sum + p.rent, 0);
+  const roomShare = ((roomsRevenue / monthlyRevenue) * 100).toFixed(1);
+  const todayLabel = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "2-digit", month: "long", year: "numeric" }).format(today);
+
+  const metric = (label, value, foot, icon, tone = "") => `<article class="metric-card ${tone}">
+    <div class="metric-top"><span class="metric-label">${label}</span><span class="metric-icon" data-icon="${icon}"></span></div>
+    <strong class="metric-value">${value}</strong><div class="metric-foot">${foot}</div>
+  </article>`;
+
+  const priorityRows = priorities.slice(0, 6).map(({ property, meta }) => {
+    const date = parseDate(property.nextAdjustment);
+    return `<button class="alert-row clickable-row" data-property-id="${property.id}">
+      <span class="alert-date"><strong>${String(date.getDate()).padStart(2, "0")}</strong><span>${date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span></span>
+      <span><strong class="item-title">${property.code}</strong><span class="item-subtitle">${property.type}</span></span>
+      <span><strong class="item-title">${property.tenant}</strong><span class="item-subtitle">${property.billing}</span></span>
+      <span>${statusPill(meta)}</span><span class="money">${currency.format(property.rent)}</span><span data-icon="chevron"></span>
+    </button>`;
+  }).join("");
+
+  const roomCells = properties.filter((p) => p.type === "Sala").map((property) => {
+    const meta = adjustmentMeta(property);
+    const className = property.occupancy === "Uso interno" ? "internal" : meta.key === "overdue" ? "risk" : meta.key === "soon" ? "soon" : "";
+    return `<button class="room-cell ${className}" data-property-id="${property.id}" title="${property.code} — ${property.tenant}"><strong>${property.shortCode}</strong><span>${property.tenant.split(" /")[0]}</span></button>`;
+  }).join("");
+
+  app.innerHTML = `${heading("Painel administrativo", "Olá, Espaço VIP", `Acompanhe sua operação em um só lugar. ${todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1)}.`, `
+    <button class="button secondary" data-action="export"><span data-icon="download"></span> Exportar CSV</button>
+    <button class="button primary" data-view-jump="properties"><span data-icon="building"></span> Ver imóveis</button>`)}
+    <section class="metrics-grid">
+      ${metric("Total de unidades", properties.length, `<strong>${rented}</strong> locadas e ${properties.length - rented} de uso interno`, "building")}
+      ${metric("Receita base mensal", currency.format(monthlyRevenue), "Aluguel vigente, sem condomínio e IPTU", "money")}
+      ${metric("Ações em até 60 dias", priorities.length, `${priorities.filter((x) => x.meta.key === "soon").length} em até 30 dias`, "calendar", "warning")}
+      ${metric("Reajustes atrasados", overdue, overdue ? "Exigem ação imediata" : "Nenhuma pendência", "alert", "danger")}
+    </section>
+    <section class="dashboard-grid">
+      <div class="stack">
+        <article class="panel">
+          <header class="panel-header"><div><h2>Agenda de reajustes</h2><p>Itens vencidos ou previstos nos próximos 60 dias</p></div><button class="panel-link" data-view-jump="agenda">Ver agenda <span data-icon="arrow"></span></button></header>
+          <div class="alert-list">${priorityRows}</div>
+        </article>
+        <article class="panel">
+          <header class="panel-header"><div><h2>Mapa de ocupação — Espaço VIP</h2><p>Clique em uma sala para abrir o cadastro completo</p></div><button class="panel-link" data-view-jump="properties">Todos os imóveis <span data-icon="arrow"></span></button></header>
+          <div class="panel-body occupancy-layout">
+            <div class="room-grid">${roomCells}</div>
+            <div class="donut-wrap">
+              <div class="donut" style="--rooms:${roomShare}%"><div class="donut-center"><strong>${currency.format(monthlyRevenue)}</strong><span>base mensal</span></div></div>
+              <div class="legend">
+                <div class="legend-row"><span class="legend-label"><i class="legend-dot" style="background:var(--blue-600)"></i>Salas</span><strong>${currency.format(roomsRevenue)}</strong></div>
+                <div class="legend-row"><span class="legend-label"><i class="legend-dot" style="background:#72c9a0"></i>Externos</span><strong>${currency.format(monthlyRevenue - roomsRevenue)}</strong></div>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+      <div class="stack">
+        <article class="panel">
+          <header class="panel-header"><div><h2>Próximas ações</h2><p>Fluxo sugerido para a operação atual</p></div></header>
+          <div class="panel-body task-list">
+            <div class="task-item"><span class="task-number">1</span><div><strong>Regularizar reajustes vencidos</strong><p>Conferir contrato, calcular índice e notificar Léa e Danilo.</p></div><span class="task-count">2 imóveis</span></div>
+            <div class="task-item"><span class="task-number">2</span><div><strong>Preparar reajustes de agosto</strong><p>INVI, Adrielle, imóvel 783 e Caroline vencem em seguida.</p></div><span class="task-count">4 imóveis</span></div>
+            <div class="task-item"><span class="task-number">3</span><div><strong>Revisar divergências</strong><p>Conferir os documentos de Carol, Adrielle, Heliodoro e Marcello.</p></div><span class="task-count">4 cadastros</span></div>
+            <div class="task-item"><span class="task-number">4</span><div><strong>Centralizar documentos</strong><p>Vincular contratos, comprovantes e notificações por imóvel.</p></div><span class="task-count">Próxima fase</span></div>
+          </div>
+        </article>
+        <article class="panel">
+          <header class="panel-header"><div><h2>Qualidade da base</h2><p>Preparação para automações futuras</p></div></header>
+          <div class="panel-body">
+            <div class="legend">
+              <div class="legend-row"><span class="legend-label"><i class="legend-dot" style="background:#72c9a0"></i>Imóveis identificados</span><strong>36/36</strong></div>
+              <div class="legend-row"><span class="legend-label"><i class="legend-dot" style="background:var(--blue-600)"></i>Inquilinos atuais</span><strong>33/33</strong></div>
+              <div class="legend-row"><span class="legend-label"><i class="legend-dot" style="background:#f4b54b"></i>Cadastros a revisar</span><strong>4</strong></div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>`;
+}
+
+function filteredProperties() {
+  const term = state.query.trim().toLocaleLowerCase("pt-BR");
+  return properties.filter((property) => {
+    const meta = adjustmentMeta(property);
+    const matchTerm = !term || [property.code, property.tenant, property.type, property.notes].filter(Boolean).join(" ").toLocaleLowerCase("pt-BR").includes(term);
+    const matchType = state.type === "Todos" || property.type === state.type;
+    const matchOccupancy = state.occupancy === "Todos" || property.occupancy === state.occupancy;
+    const matchAdjustment = state.adjustment === "Todos" || meta.key === state.adjustment;
+    return matchTerm && matchType && matchOccupancy && matchAdjustment;
+  });
+}
+
+function propertiesContent(items) {
+  if (!items.length) return `<div class="empty-state"><div class="empty-state-icon" data-icon="search"></div><h3>Nenhum imóvel encontrado</h3><p>Ajuste os filtros ou pesquise por outro termo.</p></div>`;
+  if (state.propertyLayout === "cards") {
+    return `<div class="property-cards">${items.map((property) => {
+      const meta = adjustmentMeta(property);
+      return `<button class="property-card" data-property-id="${property.id}">
+        <div class="property-card-head"><span class="property-icon" data-icon="${property.type === "Sala" ? "building" : "home"}"></span>${statusPill(meta)}</div>
+        <h3>${property.code}</h3><div class="tenant">${property.tenant}</div>
+        <div class="property-card-stats"><div class="small-stat"><span>Aluguel</span><strong>${property.rent ? currency.format(property.rent) : "Uso interno"}</strong></div><div class="small-stat"><span>Próximo reajuste</span><strong>${property.nextAdjustment ? formatDate(property.nextAdjustment) : "—"}</strong></div></div>
+      </button>`;
+    }).join("")}</div>`;
+  }
+  return `<div class="data-table-wrap"><table class="data-table"><thead><tr><th>Imóvel</th><th>Inquilino / uso</th><th>Tipo</th><th>Aluguel</th><th>Próximo reajuste</th><th>Situação</th><th></th></tr></thead><tbody>${items.map((property) => {
+    const meta = adjustmentMeta(property);
+    return `<tr class="clickable-row" data-property-id="${property.id}"><td><strong class="item-title">${property.code}</strong><span class="item-subtitle">${property.group}</span></td><td><strong class="item-title">${property.tenant}</strong><span class="item-subtitle">${property.currentUse || property.contractStatus}</span></td><td><span class="type-badge"><span data-icon="${property.type === "Sala" ? "building" : "home"}"></span>${property.type}</span></td><td class="money">${property.rent ? currency.format(property.rent) : "—"}</td><td class="date-cell"><strong>${property.nextAdjustment ? formatDate(property.nextAdjustment) : "Não se aplica"}</strong><span>${relativeDays(meta.days)}</span></td><td>${statusPill(meta)}</td><td><span data-icon="chevron"></span></td></tr>`;
+  }).join("")}</tbody></table></div>`;
+}
+
+function renderProperties() {
+  const items = filteredProperties();
+  app.innerHTML = `${heading("Portfólio", "Imóveis e salas", "Consulte ocupação, valores, reajustes, histórico e próximos passos de cada unidade.", `<button class="button secondary" data-action="export"><span data-icon="download"></span> Exportar CSV</button>`)}
+    <section class="panel">
+      <div class="toolbar">
+        <label class="toolbar-search"><span data-icon="search"></span><input id="propertySearch" value="${state.query.replaceAll('"', '&quot;')}" placeholder="Buscar imóvel ou inquilino..." /></label>
+        <select class="select" id="typeFilter"><option>Todos</option><option ${state.type === "Sala" ? "selected" : ""}>Sala</option><option ${state.type === "Imóvel externo" ? "selected" : ""}>Imóvel externo</option></select>
+        <select class="select" id="occupancyFilter"><option>Todos</option><option ${state.occupancy === "Locado" ? "selected" : ""}>Locado</option><option ${state.occupancy === "Uso interno" ? "selected" : ""}>Uso interno</option></select>
+        <select class="select" id="adjustmentFilter"><option value="Todos">Todos os reajustes</option><option value="overdue" ${state.adjustment === "overdue" ? "selected" : ""}>Atrasados</option><option value="soon" ${state.adjustment === "soon" ? "selected" : ""}>Até 30 dias</option><option value="attention" ${state.adjustment === "attention" ? "selected" : ""}>31 a 60 dias</option><option value="regular" ${state.adjustment === "regular" ? "selected" : ""}>Regulares</option></select>
+        <div class="view-toggle"><button class="${state.propertyLayout === "table" ? "active" : ""}" data-layout="table" aria-label="Exibir tabela"><span data-icon="list"></span></button><button class="${state.propertyLayout === "cards" ? "active" : ""}" data-layout="cards" aria-label="Exibir cartões"><span data-icon="grid"></span></button></div>
+      </div>
+      <div id="propertiesResults">${propertiesContent(items)}</div>
+    </section>`;
+}
+
+function renderAgenda() {
+  const mapped = properties.map((property) => ({ property, meta: adjustmentMeta(property) })).filter(({ meta }) => meta.key !== "internal").sort((a, b) => a.meta.days - b.meta.days);
+  const groups = [
+    ["overdue", "Atrasados", "Ação imediata"],
+    ["soon", "Próximos 30 dias", "Preparar cálculo e comunicação"],
+    ["attention", "Entre 31 e 60 dias", "Antecipar conferência do contrato"],
+    ["regular", "Próximos depois de 60 dias", "Acompanhamento programado"],
+  ];
+  const sections = groups.map(([key, title, subtitle]) => {
+    const items = mapped.filter(({ meta }) => meta.key === key);
+    return `<section><header class="agenda-section-header"><h2>${title}</h2><span>${items.length} ${items.length === 1 ? "imóvel" : "imóveis"} · ${subtitle}</span></header><div class="agenda-cards">${items.map(({ property, meta }) => {
+      const date = parseDate(property.nextAdjustment);
+      return `<button class="agenda-card" data-property-id="${property.id}"><span class="agenda-calendar"><strong>${String(date.getDate()).padStart(2, "0")}</strong><span>${date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span></span><span><h3>${property.code}</h3><p>${property.tenant}</p>${statusPill(meta)} <span class="item-subtitle" style="display:inline;margin-left:5px">${relativeDays(meta.days)}</span></span></button>`;
+    }).join("")}</div></section>`;
+  }).join("");
+  app.innerHTML = `${heading("Calendário operacional", "Agenda de reajustes", "Prioridades ordenadas pela próxima data prevista. Abra um imóvel para ver a sequência sugerida de ações.", `<button class="button secondary" data-action="export"><span data-icon="download"></span> Exportar agenda</button>`)}<div class="agenda-sections">${sections}</div>`;
+}
+
+function renderHistory() {
+  const saved = activities.map((activity) => {
+    const property = properties.find((p) => p.id === activity.propertyId);
+    return { date: activity.createdAt.slice(0, 10), title: activity.type, description: activity.description, propertyId: activity.propertyId, propertyCode: property?.code || "Imóvel" };
+  });
+  const items = [...saved, ...knownHistory].sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return b.date.localeCompare(a.date);
+  });
+  app.innerHTML = `${heading("Linha do tempo", "Histórico de imóveis e inquilinos", "Mudanças de sala, entradas, saídas, reajustes e acompanhamentos ficam vinculados ao cadastro do imóvel.")}
+    <section class="panel"><div class="panel-body" style="padding-top:16px"><div class="timeline">${items.map((item) => `<div class="timeline-item"><span class="timeline-dot"></span><span class="timeline-date">${item.date ? formatDate(item.date) : "Data anterior"}</span><div class="timeline-content"><strong>${item.title} · ${item.propertyCode}</strong><p>${item.description}</p></div><button class="button ghost" data-property-id="${item.propertyId}">Ver imóvel</button></div>`).join("")}</div></div></section>`;
+}
+
+function renderDocuments() {
+  const categories = [
+    ["file", "Contratos", "Contratos atuais e versões anteriores por inquilino.", "Estrutura pronta"],
+    ["money", "Comprovantes", "PDFs, fotos e recibos vinculados ao mês de referência.", "Próxima fase"],
+    ["alert", "Notificações", "Reajustes, cobranças e comunicações enviadas.", "Próxima fase"],
+    ["home", "IPTU", "Guias, valores anuais e notificações vinculadas ao imóvel.", "5 valores mapeados"],
+  ];
+  app.innerHTML = `${heading("Central de arquivos", "Documentos", "Esta área será a biblioteca de contratos, comprovantes, notificações e IPTU. A organização já está definida para a próxima integração.", `<button class="button primary" data-action="coming"><span data-icon="plus"></span> Adicionar documento</button>`)}
+    <section class="document-grid">${categories.map(([icon, title, text, foot]) => `<article class="document-category"><span class="doc-icon" data-icon="${icon}"></span><h3>${title}</h3><p>${text}</p><div class="doc-foot"><span>${foot}</span><span data-icon="chevron" style="width:13px"></span></div></article>`).join("")}</section>
+    <section class="panel" style="margin-top:18px"><header class="panel-header"><div><h2>Padrão de organização recomendado</h2><p>Cada arquivo será associado a um imóvel, inquilino, competência e tipo</p></div></header><div class="panel-body roadmap">
+      <div class="roadmap-item"><span class="roadmap-step">01</span><div><strong>Vincular Google Drive</strong><p>Usar a pasta Contratos Atuais como origem, sem duplicar arquivos.</p></div><span class="roadmap-status">Próximo</span></div>
+      <div class="roadmap-item"><span class="roadmap-step">02</span><div><strong>Classificar documentos</strong><p>Contrato, aditivo, comprovante, notificação ou IPTU.</p></div><span class="roadmap-status">Planejado</span></div>
+      <div class="roadmap-item"><span class="roadmap-step">03</span><div><strong>Busca e visualização</strong><p>Localizar documentos pelo imóvel, inquilino, data ou competência.</p></div><span class="roadmap-status">Planejado</span></div>
+    </div></section>`;
+}
+
+function renderSettings() {
+  app.innerHTML = `${heading("Evolução do sistema", "Configurações e próximos módulos", "O painel foi estruturado para crescer gradualmente, mantendo os dados atuais como ponto de partida.")}
+    <section class="panel"><header class="panel-header"><div><h2>Roteiro de implementação</h2><p>Sequência recomendada para transformar o protótipo em sistema operacional</p></div></header><div class="panel-body roadmap">
+      <div class="roadmap-item"><span class="roadmap-step">01</span><div><strong>Base de imóveis e reajustes</strong><p>Painel, busca, filtros, histórico e próximos passos.</p></div><span class="roadmap-status" style="color:var(--green-700);background:var(--green-100)">Concluído</span></div>
+      <div class="roadmap-item"><span class="roadmap-step">02</span><div><strong>Banco de dados e autenticação</strong><p>Salvar alterações de forma centralizada e controlar usuários.</p></div><span class="roadmap-status">Recomendado</span></div>
+      <div class="roadmap-item"><span class="roadmap-step">03</span><div><strong>Pagamentos e documentos</strong><p>Competências mensais, comprovantes e arquivos do Google Drive.</p></div><span class="roadmap-status">Planejado</span></div>
+      <div class="roadmap-item"><span class="roadmap-step">04</span><div><strong>WhatsApp e chave PIX</strong><p>Lembretes automáticos com mensagem revisável e registro de envio.</p></div><span class="roadmap-status">Planejado</span></div>
+      <div class="roadmap-item"><span class="roadmap-step">05</span><div><strong>Contratos e reajustes automáticos</strong><p>Formulários, modelos, índice oficial e geração de documentos.</p></div><span class="roadmap-status">Futuro</span></div>
+      <div class="roadmap-item"><span class="roadmap-step">06</span><div><strong>Consulta e notificação de IPTU</strong><p>Busca por imóvel, geração do PDF e envio ao inquilino.</p></div><span class="roadmap-status">Futuro</span></div>
+    </div></section>
+    <section class="panel" style="margin-top:18px"><header class="panel-header"><div><h2>Fonte dos dados</h2><p>Base inicial utilizada por esta versão</p></div></header><div class="panel-body"><div class="info-grid"><div class="info-item"><span>Última consolidação</span><strong>${formatDate(SOURCE_UPDATED_AT)}</strong></div><div class="info-item"><span>Unidades cadastradas</span><strong>${properties.length}</strong></div><div class="info-item"><span>Persistência desta versão</span><strong>Navegador local</strong></div><div class="info-item"><span>Próxima integração</span><strong>Google Planilhas / banco de dados</strong></div></div></div></section>`;
+}
+
+function render() {
+  document.querySelectorAll(".nav-item[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === state.view));
+  if (state.view === "dashboard") renderDashboard();
+  if (state.view === "properties") renderProperties();
+  if (state.view === "agenda") renderAgenda();
+  if (state.view === "history") renderHistory();
+  if (state.view === "documents") renderDocuments();
+  if (state.view === "settings") renderSettings();
+  hydrateIcons(app);
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+function propertyHistory(property) {
+  const saved = activities.filter((a) => a.propertyId === property.id).map((a) => ({ date: a.createdAt.slice(0, 10), title: a.type, description: a.description }));
+  const baseItems = knownHistory.filter((item) => item.propertyId === property.id);
+  return [...saved, ...baseItems].sort((a, b) => {
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return b.date.localeCompare(a.date);
+  });
+}
+
+function openProperty(propertyId) {
+  const property = properties.find((item) => item.id === propertyId);
+  if (!property) return;
+  const meta = adjustmentMeta(property);
+  const history = propertyHistory(property);
+  const steps = getNextSteps(property);
+  drawer.innerHTML = `<header class="drawer-header"><div class="drawer-top"><div><span class="eyebrow">${property.type} · ${property.occupancy}</span><h2>${property.code}</h2><p>${property.tenant}${property.currentUse ? ` · ${property.currentUse}` : ""}</p></div><button class="icon-button" data-close-drawer aria-label="Fechar"><span data-icon="close"></span></button></div>
+    <div class="drawer-summary"><div class="drawer-stat"><span>Aluguel vigente</span><strong>${property.rent ? fullCurrency.format(property.rent) : "Não se aplica"}</strong></div><div class="drawer-stat"><span>Próximo reajuste</span><strong>${property.nextAdjustment ? formatDate(property.nextAdjustment) : "Não se aplica"}</strong></div><div class="drawer-stat"><span>Situação</span><strong>${meta.label}</strong></div></div></header>
+    <div class="drawer-body">
+      <section class="drawer-section"><div class="drawer-section-title"><h3>Informações atuais</h3>${statusPill(meta)}</div><div class="info-grid">
+        <div class="info-item"><span>Inquilino / responsável</span><strong>${property.tenant}</strong></div><div class="info-item"><span>Status de ocupação</span><strong>${property.occupancy}</strong></div>
+        <div class="info-item"><span>Forma de cobrança</span><strong>${property.billing}</strong></div><div class="info-item"><span>Encargos</span><strong>${property.charges}</strong></div>
+        <div class="info-item"><span>Último evento</span><strong>${property.lastEvent}</strong></div><div class="info-item"><span>Data do evento</span><strong>${formatDate(property.lastDate)}</strong></div>
+        ${property.referenceRent ? `<div class="info-item"><span>Valor integral / referência</span><strong>${fullCurrency.format(property.referenceRent)}</strong></div>` : ""}
+        ${property.iptu ? `<div class="info-item"><span>IPTU mensal registrado</span><strong>${fullCurrency.format(property.iptu)}</strong></div>` : ""}
+      </div></section>
+      <section class="drawer-section"><div class="drawer-section-title"><h3>Próximos passos</h3><button class="button ghost" data-add-activity="${property.id}"><span data-icon="plus"></span> Registrar andamento</button></div><div class="next-step-list">${steps.map(([title, text]) => `<div class="next-step"><span class="next-step-check"></span><div><strong>${title}</strong><p>${text}</p></div></div>`).join("")}</div></section>
+      ${property.notes ? `<section class="drawer-section"><div class="drawer-section-title"><h3>Observações importantes</h3></div><div class="notes-box">${property.notes}</div></section>` : ""}
+      <section class="drawer-section"><div class="drawer-section-title"><h3>Histórico</h3><span class="item-subtitle">${history.length} registros</span></div>${history.length ? `<div class="timeline">${history.map((item) => `<div class="timeline-item" style="grid-template-columns:32px 80px 1fr"><span class="timeline-dot"></span><span class="timeline-date">${item.date ? formatDate(item.date) : "Anterior"}</span><div class="timeline-content"><strong>${item.title}</strong><p>${item.description}</p></div></div>`).join("")}</div>` : `<div class="empty-state" style="padding:20px"><p>Nenhum evento histórico registrado.</p></div>`}</section>
+      <section class="drawer-section"><div class="drawer-section-title"><h3>Fonte e documentos</h3></div><a class="source-link" href="${property.source}" target="_blank" rel="noreferrer">Abrir fonte no Google Planilhas <span data-icon="external" style="display:inline-block;width:13px;vertical-align:middle"></span></a><p class="item-subtitle" style="white-space:normal;margin-top:8px">Contratos, comprovantes e notificações serão exibidos aqui após a conexão com o Google Drive.</p></section>
+    </div>`;
+  hydrateIcons(drawer);
+  drawerBackdrop.hidden = false;
+  drawer.classList.add("open");
+  drawer.setAttribute("aria-hidden", "false");
+}
+
+function closeDrawer() {
+  drawer.classList.remove("open");
+  drawer.setAttribute("aria-hidden", "true");
+  setTimeout(() => { drawerBackdrop.hidden = true; }, 220);
+}
+
+function openActivityModal(propertyId) {
+  document.querySelector("#activityPropertyId").value = propertyId;
+  document.querySelector("#activityDescription").value = "";
+  modalBackdrop.hidden = false;
+  setTimeout(() => document.querySelector("#activityDescription").focus(), 40);
+}
+
+function closeModal() { modalBackdrop.hidden = true; }
+
+function toast(title, message) {
+  const node = document.createElement("div");
+  node.className = "toast";
+  node.innerHTML = `<span data-icon="check"></span><div><strong>${title}</strong><span>${message}</span></div>`;
+  document.querySelector("#toastRegion").append(node);
+  hydrateIcons(node);
+  setTimeout(() => node.remove(), 4200);
+}
+
+function exportCsv() {
+  const header = ["Imóvel", "Tipo", "Inquilino", "Ocupação", "Aluguel", "Último evento", "Data do último evento", "Próximo reajuste", "Situação", "Dias restantes"];
+  const rows = properties.map((p) => {
+    const meta = adjustmentMeta(p);
+    return [p.code, p.type, p.tenant, p.occupancy, p.rent, p.lastEvent, p.lastDate || "", p.nextAdjustment || "", meta.label, meta.days ?? ""];
+  });
+  const csv = [header, ...rows].map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(";")).join("\n");
+  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "gestao_imoveis_espaco_vip.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+  toast("Exportação concluída", "O arquivo CSV foi gerado com os 36 imóveis cadastrados.");
+}
+
+function setView(view) {
+  state.view = view;
+  history.replaceState(null, "", `#${view}`);
+  render();
+  sidebar.classList.remove("open");
+}
+
+document.addEventListener("click", (event) => {
+  const nav = event.target.closest("[data-view]");
+  if (nav) setView(nav.dataset.view);
+  const jump = event.target.closest("[data-view-jump]");
+  if (jump) setView(jump.dataset.viewJump);
+  const propertyTrigger = event.target.closest("[data-property-id]");
+  if (propertyTrigger) openProperty(propertyTrigger.dataset.propertyId);
+  if (event.target.closest("[data-close-drawer]")) closeDrawer();
+  const activity = event.target.closest("[data-add-activity]");
+  if (activity) openActivityModal(activity.dataset.addActivity);
+  const layout = event.target.closest("[data-layout]");
+  if (layout) { state.propertyLayout = layout.dataset.layout; renderProperties(); hydrateIcons(app); }
+  const action = event.target.closest("[data-action]")?.dataset.action;
+  if (action === "export") exportCsv();
+  if (action === "coming") toast("Módulo preparado", "O envio de arquivos será ativado na integração com o Google Drive.");
+  if (event.target.closest("[data-open-agenda]")) setView("agenda");
+});
+
+document.querySelector("#mobileMenu").addEventListener("click", () => sidebar.classList.toggle("open"));
+drawerBackdrop.addEventListener("click", closeDrawer);
+document.querySelector("#closeModal").addEventListener("click", closeModal);
+document.querySelector("#cancelModal").addEventListener("click", closeModal);
+modalBackdrop.addEventListener("click", (event) => { if (event.target === modalBackdrop) closeModal(); });
+
+document.querySelector("#activityForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  const propertyId = document.querySelector("#activityPropertyId").value;
+  const type = document.querySelector("#activityType").value;
+  const description = document.querySelector("#activityDescription").value.trim();
+  activities.unshift({ id: crypto.randomUUID(), propertyId, type, description, createdAt: new Date().toISOString() });
+  localStorage.setItem(activityKey, JSON.stringify(activities));
+  closeModal();
+  openProperty(propertyId);
+  toast("Registro salvo", "O acompanhamento foi adicionado ao histórico deste imóvel.");
+});
+
+app.addEventListener("input", (event) => {
+  if (event.target.id === "propertySearch") {
+    state.query = event.target.value;
+    document.querySelector("#propertiesResults").innerHTML = propertiesContent(filteredProperties());
+    hydrateIcons(document.querySelector("#propertiesResults"));
+  }
+});
+
+app.addEventListener("change", (event) => {
+  if (event.target.id === "typeFilter") state.type = event.target.value;
+  if (event.target.id === "occupancyFilter") state.occupancy = event.target.value;
+  if (event.target.id === "adjustmentFilter") state.adjustment = event.target.value;
+  if (["typeFilter", "occupancyFilter", "adjustmentFilter"].includes(event.target.id)) {
+    document.querySelector("#propertiesResults").innerHTML = propertiesContent(filteredProperties());
+    hydrateIcons(document.querySelector("#propertiesResults"));
+  }
+});
+
+const globalSearch = document.querySelector("#globalSearch");
+globalSearch.addEventListener("keydown", (event) => {
+  if (event.key === "Enter" && globalSearch.value.trim()) {
+    state.query = globalSearch.value;
+    setView("properties");
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); globalSearch.focus(); }
+  if (event.key === "Escape") { closeDrawer(); closeModal(); sidebar.classList.remove("open"); }
+});
+
+const initialView = location.hash.slice(1);
+if (["dashboard", "properties", "agenda", "history", "documents", "settings"].includes(initialView)) state.view = initialView;
+document.querySelector("#propertyNavCount").textContent = properties.length;
+document.querySelector("#agendaNavCount").textContent = getPriorityProperties().length;
+hydrateIcons();
+render();
+
+</script>
+  </body>
+</html>
