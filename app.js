@@ -66,7 +66,18 @@ const state = {
   type: "Todos",
   occupancy: "Todos",
   adjustment: "Todos",
+  paymentPropertyId: null,
+  paymentMonth: `${todayYear()}-${String(todayMonth()).padStart(2, "0")}-01`,
+  payments: [],
+  paymentsLoadedFor: null,
+  paymentsLoading: false,
+  paymentLoadToken: 0,
+  paymentSelectionStart: null,
+  paymentSelectionEnd: null,
 };
+
+function todayYear() { return new Date().getFullYear(); }
+function todayMonth() { return new Date().getMonth() + 1; }
 
 async function apiRequest(path, options = {}) {
   const response = await fetch(path, {
@@ -320,6 +331,127 @@ function renderAgenda() {
   app.innerHTML = `${heading("Calendário operacional", "Agenda de reajustes", "Prioridades ordenadas pela próxima data prevista. Abra um imóvel para ver a sequência sugerida de ações.", `<button class="button secondary" data-action="export"><span data-icon="download"></span> Exportar agenda</button>`)}<div class="agenda-sections">${sections}</div>`;
 }
 
+const paymentPalette = {
+  blue: { label: "Azul", hex: "#dcecff" },
+  green: { label: "Verde", hex: "#dff4e8" },
+  purple: { label: "Roxo", hex: "#ebe2f8" },
+  yellow: { label: "Amarelo", hex: "#fff1c9" },
+  pink: { label: "Rosa", hex: "#f8dfeb" },
+  peach: { label: "Pêssego", hex: "#fde5d6" },
+  teal: { label: "Turquesa", hex: "#d9f1ef" },
+};
+
+function isoDate(date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function ensurePaymentProperty() {
+  const eligible = properties.filter((property) => property.occupancy === "Locado" && property.leaseId);
+  if (!eligible.some((property) => property.id === state.paymentPropertyId)) {
+    state.paymentPropertyId = eligible[0]?.id || null;
+  }
+  return eligible;
+}
+
+async function loadPayments(propertyId = state.paymentPropertyId) {
+  if (!propertyId) return;
+  const loadToken = ++state.paymentLoadToken;
+  state.paymentsLoading = true;
+  if (state.view === "payments") renderPayments();
+  try {
+    const result = await apiRequest(`./api/payments.php?propertyId=${encodeURIComponent(propertyId)}`);
+    if (state.paymentPropertyId !== propertyId || loadToken !== state.paymentLoadToken) return;
+    state.payments = result.payments || [];
+    state.paymentsLoadedFor = propertyId;
+  } catch (error) {
+    if (state.paymentPropertyId === propertyId && loadToken === state.paymentLoadToken) {
+      state.payments = [];
+      toast("Não foi possível carregar", error.message);
+    }
+  } finally {
+    if (loadToken === state.paymentLoadToken) {
+      state.paymentsLoading = false;
+      if (state.view === "payments") renderPayments();
+    }
+  }
+}
+
+function renderPayments() {
+  const eligible = ensurePaymentProperty();
+  const selectedProperty = properties.find((property) => property.id === state.paymentPropertyId);
+  const month = parseDate(state.paymentMonth) || new Date(today.getFullYear(), today.getMonth(), 1, 12);
+  const monthLabel = month.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+  const firstDay = new Date(month.getFullYear(), month.getMonth(), 1, 12);
+  const offset = (firstDay.getDay() + 6) % 7;
+  const gridStart = new Date(firstDay);
+  gridStart.setDate(gridStart.getDate() - offset);
+  const selectionEnd = state.paymentSelectionEnd || state.paymentSelectionStart;
+  const weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+
+  const cells = Array.from({ length: 42 }, (_, index) => {
+    const date = new Date(gridStart);
+    date.setDate(gridStart.getDate() + index);
+    const value = isoDate(date);
+    const payment = state.payments.find((item) => item.periodStart <= value && item.periodEnd >= value);
+    const inSelection = state.paymentSelectionStart && value >= state.paymentSelectionStart && value <= selectionEnd;
+    const classes = [
+      "payment-day",
+      date.getMonth() !== month.getMonth() ? "outside" : "",
+      payment ? `payment-${payment.color}` : "",
+      inSelection ? "selecting" : "",
+      value === isoDate(today) ? "today" : "",
+    ].filter(Boolean).join(" ");
+    return `<button type="button" class="${classes}" data-calendar-date="${value}" aria-label="${formatDate(value)}">
+      <span class="payment-day-number">${date.getDate()}</span>
+      ${payment && payment.periodStart === value ? `<span class="payment-day-amount">${currency.format(payment.amountPaid)}</span>` : ""}
+    </button>`;
+  }).join("");
+
+  const paymentRows = state.payments.map((payment) => {
+    const color = paymentPalette[payment.color] || paymentPalette.blue;
+    return `<article class="payment-history-item">
+      <span class="payment-history-color" style="--payment-color:${color.hex}"></span>
+      <div><strong>${formatDate(payment.periodStart)} a ${formatDate(payment.periodEnd)}</strong><span>${escapeHtml(selectedProperty?.tenant || payment.tenant)} · ${color.label} pastel</span></div>
+      <strong class="payment-history-amount">${fullCurrency.format(payment.amountPaid)}</strong>
+    </article>`;
+  }).join("");
+  const totalPaid = state.payments.reduce((sum, payment) => sum + payment.amountPaid, 0);
+  const hasCompleteSelection = state.paymentSelectionStart && state.paymentSelectionEnd;
+
+  app.innerHTML = `${heading("Controle financeiro", "Histórico de pagamentos", "Selecione o imóvel e marque no calendário o primeiro e o último dia do período pago.")}
+    <section class="payment-toolbar panel">
+      <label><span>Imóvel / unidade</span><select class="select" id="paymentProperty">${eligible.map((property) => `<option value="${escapeHtml(property.id)}" ${property.id === state.paymentPropertyId ? "selected" : ""}>${escapeHtml(property.code)} — ${escapeHtml(property.tenant)}</option>`).join("")}</select></label>
+      <div class="payment-toolbar-summary"><span>Total registrado</span><strong>${fullCurrency.format(totalPaid)}</strong></div>
+    </section>
+    <section class="payment-layout">
+      <article class="panel payment-calendar-panel">
+        <header class="payment-calendar-header">
+          <div><h2>${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}</h2><p>${state.paymentSelectionStart ? (state.paymentSelectionEnd ? `${formatDate(state.paymentSelectionStart)} a ${formatDate(state.paymentSelectionEnd)}` : `Início em ${formatDate(state.paymentSelectionStart)} — selecione o último dia`) : "Clique no primeiro dia do período pago"}</p></div>
+          <div class="calendar-navigation"><button type="button" class="icon-button" data-calendar-shift="-1" aria-label="Mês anterior">←</button><button type="button" class="button ghost" data-calendar-today>Hoje</button><button type="button" class="icon-button" data-calendar-shift="1" aria-label="Próximo mês">→</button></div>
+        </header>
+        <div class="payment-weekdays">${weekdays.map((day) => `<span>${day}</span>`).join("")}</div>
+        <div class="payment-calendar">${cells}</div>
+        <div class="payment-calendar-legend">${Object.entries(paymentPalette).map(([key, color]) => `<span><i class="payment-${key}"></i>${color.label}</span>`).join("")}</div>
+      </article>
+      <aside class="payment-side">
+        <section class="panel payment-entry-card">
+          <header><span class="eyebrow">Novo pagamento</span><h2>Registrar período pago</h2></header>
+          ${hasCompleteSelection ? `<form id="paymentForm" class="payment-form">
+            <div class="selected-payment-period"><span>Período selecionado</span><strong>${formatDate(state.paymentSelectionStart)} a ${formatDate(state.paymentSelectionEnd)}</strong></div>
+            <label><span>Valor pago</span><input id="paymentAmount" name="amountPaid" type="number" min="0.01" max="99999999.99" step="0.01" placeholder="0,00" required /></label>
+            <fieldset><legend>Cor do período</legend><div class="payment-color-options">${Object.entries(paymentPalette).map(([key, color], index) => `<label title="${color.label} pastel"><input type="radio" name="paymentColor" value="${key}" ${index === 0 ? "checked" : ""}/><span style="--payment-color:${color.hex}"></span><small>${color.label}</small></label>`).join("")}</div></fieldset>
+            <div class="payment-form-actions"><button type="button" class="button secondary" data-clear-payment-selection>Limpar</button><button type="submit" class="button primary"><span data-icon="check"></span> Salvar pagamento</button></div>
+          </form>` : `<div class="payment-entry-empty"><span data-icon="calendar"></span><p>${state.paymentSelectionStart ? "Agora selecione o último dia do período." : "Escolha dois dias no calendário para definir o período pago."}</p></div>`}
+        </section>
+      </aside>
+    </section>
+    <section class="panel payment-history-panel">
+      <header class="panel-header"><div><h2>Períodos registrados</h2><p>${selectedProperty ? `${escapeHtml(selectedProperty.code)} · ${escapeHtml(selectedProperty.tenant)}` : "Nenhum imóvel selecionado"}</p></div><strong>${state.payments.length} ${state.payments.length === 1 ? "pagamento" : "pagamentos"}</strong></header>
+      <div class="payment-history-list">${state.paymentsLoading ? `<div class="empty-state"><p>Carregando pagamentos…</p></div>` : paymentRows || `<div class="empty-state"><h3>Nenhum pagamento registrado</h3><p>Selecione um período no calendário para começar.</p></div>`}</div>
+    </section>`;
+  hydrateIcons(app);
+}
+
 function renderHistory() {
   const saved = activities.map((activity) => {
     const property = properties.find((p) => p.id === activity.propertyId);
@@ -367,6 +499,7 @@ function render() {
   document.querySelectorAll(".nav-item[data-view]").forEach((button) => button.classList.toggle("active", button.dataset.view === state.view));
   if (state.view === "dashboard") renderDashboard();
   if (state.view === "properties") renderProperties();
+  if (state.view === "payments") renderPayments();
   if (state.view === "agenda") renderAgenda();
   if (state.view === "history") renderHistory();
   if (state.view === "documents") renderDocuments();
@@ -457,6 +590,7 @@ function setView(view) {
   state.view = view;
   history.replaceState(null, "", `#${view}`);
   render();
+  if (view === "payments" && state.paymentPropertyId && state.paymentsLoadedFor !== state.paymentPropertyId) loadPayments();
   sidebar.classList.remove("open");
 }
 
@@ -476,6 +610,36 @@ document.addEventListener("click", (event) => {
   if (action === "export") exportCsv();
   if (action === "coming") toast("Módulo preparado", "O envio de arquivos será ativado na integração com o Google Drive.");
   if (event.target.closest("[data-open-agenda]")) setView("agenda");
+  const calendarDay = event.target.closest("[data-calendar-date]");
+  if (calendarDay) {
+    const value = calendarDay.dataset.calendarDate;
+    if (!state.paymentSelectionStart || state.paymentSelectionEnd) {
+      state.paymentSelectionStart = value;
+      state.paymentSelectionEnd = null;
+    } else if (value < state.paymentSelectionStart) {
+      state.paymentSelectionEnd = state.paymentSelectionStart;
+      state.paymentSelectionStart = value;
+    } else {
+      state.paymentSelectionEnd = value;
+    }
+    renderPayments();
+  }
+  const monthShift = event.target.closest("[data-calendar-shift]");
+  if (monthShift) {
+    const month = parseDate(state.paymentMonth);
+    month.setMonth(month.getMonth() + Number(monthShift.dataset.calendarShift));
+    state.paymentMonth = isoDate(new Date(month.getFullYear(), month.getMonth(), 1, 12));
+    renderPayments();
+  }
+  if (event.target.closest("[data-calendar-today]")) {
+    state.paymentMonth = isoDate(new Date(today.getFullYear(), today.getMonth(), 1, 12));
+    renderPayments();
+  }
+  if (event.target.closest("[data-clear-payment-selection]")) {
+    state.paymentSelectionStart = null;
+    state.paymentSelectionEnd = null;
+    renderPayments();
+  }
 });
 
 document.querySelector("#mobileMenu").addEventListener("click", () => sidebar.classList.toggle("open"));
@@ -507,6 +671,35 @@ document.querySelector("#activityForm").addEventListener("submit", async (event)
   }
 });
 
+app.addEventListener("submit", async (event) => {
+  if (event.target.id !== "paymentForm") return;
+  event.preventDefault();
+  const submitButton = event.submitter;
+  const amountPaid = document.querySelector("#paymentAmount").value;
+  const color = new FormData(event.target).get("paymentColor");
+  if (submitButton) submitButton.disabled = true;
+  try {
+    await apiRequest("./api/payments.php", {
+      method: "POST",
+      body: JSON.stringify({
+        propertyId: state.paymentPropertyId,
+        periodStart: state.paymentSelectionStart,
+        periodEnd: state.paymentSelectionEnd,
+        amountPaid,
+        color,
+      }),
+    });
+    state.paymentSelectionStart = null;
+    state.paymentSelectionEnd = null;
+    state.paymentsLoadedFor = null;
+    toast("Pagamento registrado", "O período pago foi salvo no calendário deste imóvel.");
+    await loadPayments();
+  } catch (error) {
+    toast("Não foi possível salvar", error.message);
+    if (submitButton) submitButton.disabled = false;
+  }
+});
+
 app.addEventListener("input", (event) => {
   if (event.target.id === "propertySearch") {
     state.query = event.target.value;
@@ -516,6 +709,16 @@ app.addEventListener("input", (event) => {
 });
 
 app.addEventListener("change", (event) => {
+  if (event.target.id === "paymentProperty") {
+    state.paymentPropertyId = event.target.value;
+    state.payments = [];
+    state.paymentsLoadedFor = null;
+    state.paymentSelectionStart = null;
+    state.paymentSelectionEnd = null;
+    renderPayments();
+    loadPayments();
+    return;
+  }
   if (event.target.id === "typeFilter") state.type = event.target.value;
   if (event.target.id === "occupancyFilter") state.occupancy = event.target.value;
   if (event.target.id === "adjustmentFilter") state.adjustment = event.target.value;
@@ -539,7 +742,7 @@ document.addEventListener("keydown", (event) => {
 
 async function startApplication() {
   const initialView = location.hash.slice(1);
-  if (["dashboard", "properties", "agenda", "history", "documents", "settings"].includes(initialView)) state.view = initialView;
+  if (["dashboard", "properties", "payments", "agenda", "history", "documents", "settings"].includes(initialView)) state.view = initialView;
   app.innerHTML = '<div class="empty-state"><h3>Carregando dados…</h3><p>Conectando ao banco de dados.</p></div>';
   hydrateIcons();
   try {
@@ -547,6 +750,7 @@ async function startApplication() {
     document.querySelector("#propertyNavCount").textContent = properties.length;
     document.querySelector("#agendaNavCount").textContent = getPriorityProperties().length;
     render();
+    if (state.view === "payments" && state.paymentPropertyId) loadPayments();
   } catch (error) {
     app.innerHTML = `<div class="empty-state"><h3>Banco de dados indisponível</h3><p>${escapeHtml(error.message)}</p><p>Confira o arquivo .env e execute a migração inicial.</p></div>`;
   }

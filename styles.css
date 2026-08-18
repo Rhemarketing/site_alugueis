@@ -306,6 +306,71 @@ kbd { border: 1px solid #dbe2e9; background: #fff; border-radius: 5px; color: #8
 .source-link { color: var(--blue-600); font-size: 9px; font-weight: 700; text-decoration: none; }
 .source-link:hover { text-decoration: underline; }
 
+/* Pagamentos */
+.payment-toolbar { margin-bottom: 16px; padding: 14px 17px; display: flex; align-items: end; justify-content: space-between; gap: 18px; }
+.payment-toolbar label { display: grid; gap: 6px; flex: 1; max-width: 620px; color: var(--muted); font-size: 9px; font-weight: 750; }
+.payment-toolbar .select { width: 100%; min-width: 260px; }
+.payment-toolbar-summary { text-align: right; white-space: nowrap; }
+.payment-toolbar-summary span { display: block; color: var(--soft); font-size: 8px; margin-bottom: 3px; }
+.payment-toolbar-summary strong { color: var(--navy-950); font-size: 17px; }
+.payment-layout { display: grid; grid-template-columns: minmax(0, 1fr) 310px; align-items: start; gap: 16px; }
+.payment-calendar-panel { min-width: 0; }
+.payment-calendar-header { padding: 17px 18px 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 1px solid var(--line); }
+.payment-calendar-header h2 { margin: 0; color: var(--navy-950); font-size: 16px; }
+.payment-calendar-header p { margin: 4px 0 0; color: var(--soft); font-size: 9px; }
+.calendar-navigation { display: flex; align-items: center; gap: 7px; }
+.calendar-navigation .icon-button { border: 1px solid var(--line); font-size: 15px; }
+.payment-weekdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-bottom: 1px solid var(--line); background: #f8fafc; }
+.payment-weekdays span { padding: 9px 5px; color: var(--muted); font-size: 8px; font-weight: 800; text-align: center; text-transform: uppercase; letter-spacing: .05em; }
+.payment-calendar { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); background: var(--line); gap: 1px; }
+.payment-day { position: relative; min-width: 0; min-height: 76px; padding: 8px; border: 0; background: #fff; color: var(--ink); text-align: left; transition: filter .15s ease, box-shadow .15s ease; overflow: hidden; }
+.payment-day:hover { filter: brightness(.97); z-index: 1; }
+.payment-day.outside { color: #a9b4c0; background: #fafbfd; }
+.payment-day.today .payment-day-number { background: var(--blue-600); color: #fff; }
+.payment-day.selecting { box-shadow: inset 0 0 0 2px var(--blue-600); z-index: 2; }
+.payment-day-number { width: 23px; height: 23px; display: grid; place-items: center; border-radius: 50%; font-size: 9px; font-weight: 750; }
+.payment-day-amount { display: block; margin-top: 8px; font-size: 8px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.payment-blue { background: #dcecff !important; }
+.payment-green { background: #dff4e8 !important; }
+.payment-purple { background: #ebe2f8 !important; }
+.payment-yellow { background: #fff1c9 !important; }
+.payment-pink { background: #f8dfeb !important; }
+.payment-peach { background: #fde5d6 !important; }
+.payment-teal { background: #d9f1ef !important; }
+.payment-calendar-legend { display: flex; flex-wrap: wrap; gap: 9px 14px; padding: 11px 16px; border-top: 1px solid var(--line); }
+.payment-calendar-legend span { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 8px; }
+.payment-calendar-legend i { width: 12px; height: 12px; display: block; border: 1px solid rgba(16, 47, 75, .08); border-radius: 4px; }
+.payment-side { min-width: 0; }
+.payment-entry-card { overflow: visible; position: sticky; top: 82px; }
+.payment-entry-card > header { padding: 18px 18px 14px; border-bottom: 1px solid var(--line); }
+.payment-entry-card h2 { margin: 5px 0 0; color: var(--navy-950); font-size: 15px; }
+.payment-form { padding: 15px 18px 18px; display: grid; gap: 14px; }
+.payment-form label { display: grid; gap: 6px; color: var(--muted); font-size: 9px; font-weight: 750; }
+.payment-form input[type="number"] { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 10px; color: var(--ink); font: inherit; font-size: 11px; }
+.payment-form fieldset { padding: 0; border: 0; margin: 0; }
+.payment-form legend { color: var(--muted); font-size: 9px; font-weight: 750; margin-bottom: 8px; }
+.selected-payment-period { padding: 11px; border-radius: 9px; background: #f4f8fc; border: 1px solid #dde7f0; }
+.selected-payment-period span { display: block; color: var(--soft); font-size: 8px; margin-bottom: 3px; }
+.selected-payment-period strong { color: var(--navy-950); font-size: 10px; }
+.payment-color-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.payment-color-options label { position: relative; display: grid; place-items: center; gap: 4px; padding: 6px 3px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.payment-color-options input { position: absolute; opacity: 0; }
+.payment-color-options label:has(input:checked) { border-color: var(--blue-600); box-shadow: 0 0 0 2px rgba(44, 111, 206, .12); }
+.payment-color-options span { width: 25px; height: 20px; border-radius: 6px; background: var(--payment-color); border: 1px solid rgba(16, 47, 75, .08); }
+.payment-color-options small { font-size: 7px; color: var(--soft); }
+.payment-form-actions { display: flex; justify-content: flex-end; gap: 7px; }
+.payment-entry-empty { min-height: 190px; padding: 30px 24px; display: grid; place-items: center; align-content: center; gap: 10px; color: var(--soft); text-align: center; }
+.payment-entry-empty > span { width: 34px; height: 34px; color: var(--blue-600); }
+.payment-entry-empty p { max-width: 220px; margin: 0; font-size: 9px; line-height: 1.5; }
+.payment-history-panel { margin-top: 16px; }
+.payment-history-panel .panel-header > strong { color: var(--muted); font-size: 9px; }
+.payment-history-list { display: grid; }
+.payment-history-item { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; align-items: center; gap: 11px; padding: 12px 18px; border-top: 1px solid var(--line); }
+.payment-history-color { width: 12px; height: 34px; border-radius: 5px; background: var(--payment-color); }
+.payment-history-item strong { color: var(--navy-950); font-size: 9px; }
+.payment-history-item span:not(.payment-history-color) { display: block; color: var(--soft); font-size: 8px; margin-top: 3px; }
+.payment-history-amount { font-size: 11px !important; white-space: nowrap; }
+
 .modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(8, 27, 43, .4); backdrop-filter: blur(3px); display: grid; place-items: center; padding: 18px; }
 .modal { width: min(470px, 100%); border-radius: 16px; background: #fff; box-shadow: var(--shadow-lg); overflow: hidden; }
 .modal-header { padding: 18px 20px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 15px; }
@@ -327,6 +392,7 @@ kbd { border: 1px solid #dbe2e9; background: #fff; border-radius: 5px; color: #8
   .dashboard-grid { grid-template-columns: 1fr; }
   .property-cards, .agenda-cards { grid-template-columns: repeat(2, 1fr); }
   .document-grid { grid-template-columns: repeat(2, 1fr); }
+  .payment-layout { grid-template-columns: minmax(0, 1fr) 280px; }
 }
 
 @media (max-width: 880px) {
@@ -343,6 +409,8 @@ kbd { border: 1px solid #dbe2e9; background: #fff; border-radius: 5px; color: #8
   .room-grid { grid-template-columns: repeat(6, 1fr); }
   .alert-row { grid-template-columns: 38px minmax(110px, 1fr) 100px 22px; }
   .alert-row > :nth-child(3), .alert-row > :nth-child(5) { display: none; }
+  .payment-layout { grid-template-columns: 1fr; }
+  .payment-entry-card { position: static; }
 }
 
 @media (max-width: 620px) {
@@ -366,6 +434,14 @@ kbd { border: 1px solid #dbe2e9; background: #fff; border-radius: 5px; color: #8
   .timeline::before { left: 15px; }
   .drawer-summary, .info-grid { grid-template-columns: 1fr; }
   .drawer-header, .drawer-body { padding-left: 17px; padding-right: 17px; }
+  .payment-toolbar, .payment-calendar-header { align-items: stretch; flex-direction: column; }
+  .payment-toolbar-summary { text-align: left; }
+  .payment-toolbar .select { min-width: 0; }
+  .calendar-navigation { justify-content: space-between; }
+  .payment-day { min-height: 58px; padding: 5px; }
+  .payment-day-amount { font-size: 7px; margin-top: 4px; }
+  .payment-history-item { grid-template-columns: 10px minmax(0, 1fr); }
+  .payment-history-amount { grid-column: 2; }
 }
 
 [hidden] { display: none !important; }
