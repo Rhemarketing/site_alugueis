@@ -1,0 +1,4 @@
+.env
+database/seed-data.local.json
+node_modules/
+.DS_Store

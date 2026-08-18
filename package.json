@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "python -m http.server 4173",
-    "test": "node tests.mjs"
+    "start": "php -S 127.0.0.1:4173",
+    "db:seed-export": "node scripts/export_seed.mjs",
+    "db:migrate": "php database/migrate.php",
+    "test": "node tests.mjs && node ui_test.mjs"
   }
 }

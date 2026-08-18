@@ -1,8 +1,14 @@
 .git
-Dockerfile
 .dockerignore
+.env
+.env.*
+!.env.example
 tests.mjs
 ui_test.mjs
 build_single.mjs
 package.json
 dist/
+compose.yaml
+README.md
+data.js
+scripts/

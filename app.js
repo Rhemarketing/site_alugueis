@@ -1,10 +1,28 @@
-import { properties, knownHistory, SOURCE_UPDATED_AT } from "./data.js";
+let properties = [];
+let knownHistory = [];
+let activities = [];
+let SOURCE_UPDATED_AT = null;
 
 const app = document.querySelector("#app");
 const drawer = document.querySelector("#propertyDrawer");
 const drawerBackdrop = document.querySelector("#drawerBackdrop");
 const modalBackdrop = document.querySelector("#modalBackdrop");
 const sidebar = document.querySelector("#sidebar");
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, (character) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
+  })[character]);
+}
+
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(value);
+    return ["http:", "https:"].includes(url.protocol) ? escapeHtml(url.href) : "#";
+  } catch {
+    return "#";
+  }
+}
 
 const icons = {
   dashboard: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 4h6v6H4zM14 4h6v9h-6zM4 14h6v6H4zM14 17h6v3h-6z" stroke-width="1.8" stroke-linejoin="round"/></svg>',
@@ -50,8 +68,23 @@ const state = {
   adjustment: "Todos",
 };
 
-const activityKey = "espacoVipPropertyActivities";
-let activities = JSON.parse(localStorage.getItem(activityKey) || "[]");
+async function apiRequest(path, options = {}) {
+  const response = await fetch(path, {
+    headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+    ...options,
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || "Não foi possível acessar o servidor.");
+  return payload;
+}
+
+async function loadApplicationData() {
+  const data = await apiRequest("./api/bootstrap.php");
+  properties = data.properties || [];
+  knownHistory = data.history || [];
+  activities = data.activities || [];
+  SOURCE_UPDATED_AT = data.sourceUpdatedAt || null;
+}
 
 const today = new Date();
 today.setHours(12, 0, 0, 0);
@@ -157,10 +190,10 @@ function renderDashboard() {
 
   const priorityRows = priorities.slice(0, 6).map(({ property, meta }) => {
     const date = parseDate(property.nextAdjustment);
-    return `<button class="alert-row clickable-row" data-property-id="${property.id}">
+    return `<button class="alert-row clickable-row" data-property-id="${escapeHtml(property.id)}">
       <span class="alert-date"><strong>${String(date.getDate()).padStart(2, "0")}</strong><span>${date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span></span>
-      <span><strong class="item-title">${property.code}</strong><span class="item-subtitle">${property.type}</span></span>
-      <span><strong class="item-title">${property.tenant}</strong><span class="item-subtitle">${property.billing}</span></span>
+      <span><strong class="item-title">${escapeHtml(property.code)}</strong><span class="item-subtitle">${escapeHtml(property.type)}</span></span>
+      <span><strong class="item-title">${escapeHtml(property.tenant)}</strong><span class="item-subtitle">${escapeHtml(property.billing)}</span></span>
       <span>${statusPill(meta)}</span><span class="money">${currency.format(property.rent)}</span><span data-icon="chevron"></span>
     </button>`;
   }).join("");
@@ -168,7 +201,7 @@ function renderDashboard() {
   const roomCells = properties.filter((p) => p.type === "Sala").map((property) => {
     const meta = adjustmentMeta(property);
     const className = property.occupancy === "Uso interno" ? "internal" : meta.key === "overdue" ? "risk" : meta.key === "soon" ? "soon" : "";
-    return `<button class="room-cell ${className}" data-property-id="${property.id}" title="${property.code} — ${property.tenant}"><strong>${property.shortCode}</strong><span>${property.tenant.split(" /")[0]}</span></button>`;
+    return `<button class="room-cell ${className}" data-property-id="${escapeHtml(property.id)}" title="${escapeHtml(`${property.code} — ${property.tenant}`)}"><strong>${escapeHtml(property.shortCode)}</strong><span>${escapeHtml(property.tenant.split(" /")[0])}</span></button>`;
   }).join("");
 
   app.innerHTML = `${heading("Painel administrativo", "Olá, Espaço VIP", `Acompanhe sua operação em um só lugar. ${todayLabel.charAt(0).toUpperCase() + todayLabel.slice(1)}.`, `
@@ -241,16 +274,16 @@ function propertiesContent(items) {
   if (state.propertyLayout === "cards") {
     return `<div class="property-cards">${items.map((property) => {
       const meta = adjustmentMeta(property);
-      return `<button class="property-card" data-property-id="${property.id}">
+      return `<button class="property-card" data-property-id="${escapeHtml(property.id)}">
         <div class="property-card-head"><span class="property-icon" data-icon="${property.type === "Sala" ? "building" : "home"}"></span>${statusPill(meta)}</div>
-        <h3>${property.code}</h3><div class="tenant">${property.tenant}</div>
+        <h3>${escapeHtml(property.code)}</h3><div class="tenant">${escapeHtml(property.tenant)}</div>
         <div class="property-card-stats"><div class="small-stat"><span>Aluguel</span><strong>${property.rent ? currency.format(property.rent) : "Uso interno"}</strong></div><div class="small-stat"><span>Próximo reajuste</span><strong>${property.nextAdjustment ? formatDate(property.nextAdjustment) : "—"}</strong></div></div>
       </button>`;
     }).join("")}</div>`;
   }
   return `<div class="data-table-wrap"><table class="data-table"><thead><tr><th>Imóvel</th><th>Inquilino / uso</th><th>Tipo</th><th>Aluguel</th><th>Próximo reajuste</th><th>Situação</th><th></th></tr></thead><tbody>${items.map((property) => {
     const meta = adjustmentMeta(property);
-    return `<tr class="clickable-row" data-property-id="${property.id}"><td><strong class="item-title">${property.code}</strong><span class="item-subtitle">${property.group}</span></td><td><strong class="item-title">${property.tenant}</strong><span class="item-subtitle">${property.currentUse || property.contractStatus}</span></td><td><span class="type-badge"><span data-icon="${property.type === "Sala" ? "building" : "home"}"></span>${property.type}</span></td><td class="money">${property.rent ? currency.format(property.rent) : "—"}</td><td class="date-cell"><strong>${property.nextAdjustment ? formatDate(property.nextAdjustment) : "Não se aplica"}</strong><span>${relativeDays(meta.days)}</span></td><td>${statusPill(meta)}</td><td><span data-icon="chevron"></span></td></tr>`;
+    return `<tr class="clickable-row" data-property-id="${escapeHtml(property.id)}"><td><strong class="item-title">${escapeHtml(property.code)}</strong><span class="item-subtitle">${escapeHtml(property.group)}</span></td><td><strong class="item-title">${escapeHtml(property.tenant)}</strong><span class="item-subtitle">${escapeHtml(property.currentUse || property.contractStatus)}</span></td><td><span class="type-badge"><span data-icon="${property.type === "Sala" ? "building" : "home"}"></span>${escapeHtml(property.type)}</span></td><td class="money">${property.rent ? currency.format(property.rent) : "—"}</td><td class="date-cell"><strong>${property.nextAdjustment ? formatDate(property.nextAdjustment) : "Não se aplica"}</strong><span>${relativeDays(meta.days)}</span></td><td>${statusPill(meta)}</td><td><span data-icon="chevron"></span></td></tr>`;
   }).join("")}</tbody></table></div>`;
 }
 
@@ -259,7 +292,7 @@ function renderProperties() {
   app.innerHTML = `${heading("Portfólio", "Imóveis e salas", "Consulte ocupação, valores, reajustes, histórico e próximos passos de cada unidade.", `<button class="button secondary" data-action="export"><span data-icon="download"></span> Exportar CSV</button>`)}
     <section class="panel">
       <div class="toolbar">
-        <label class="toolbar-search"><span data-icon="search"></span><input id="propertySearch" value="${state.query.replaceAll('"', '&quot;')}" placeholder="Buscar imóvel ou inquilino..." /></label>
+        <label class="toolbar-search"><span data-icon="search"></span><input id="propertySearch" value="${escapeHtml(state.query)}" placeholder="Buscar imóvel ou inquilino..." /></label>
         <select class="select" id="typeFilter"><option>Todos</option><option ${state.type === "Sala" ? "selected" : ""}>Sala</option><option ${state.type === "Imóvel externo" ? "selected" : ""}>Imóvel externo</option></select>
         <select class="select" id="occupancyFilter"><option>Todos</option><option ${state.occupancy === "Locado" ? "selected" : ""}>Locado</option><option ${state.occupancy === "Uso interno" ? "selected" : ""}>Uso interno</option></select>
         <select class="select" id="adjustmentFilter"><option value="Todos">Todos os reajustes</option><option value="overdue" ${state.adjustment === "overdue" ? "selected" : ""}>Atrasados</option><option value="soon" ${state.adjustment === "soon" ? "selected" : ""}>Até 30 dias</option><option value="attention" ${state.adjustment === "attention" ? "selected" : ""}>31 a 60 dias</option><option value="regular" ${state.adjustment === "regular" ? "selected" : ""}>Regulares</option></select>
@@ -281,7 +314,7 @@ function renderAgenda() {
     const items = mapped.filter(({ meta }) => meta.key === key);
     return `<section><header class="agenda-section-header"><h2>${title}</h2><span>${items.length} ${items.length === 1 ? "imóvel" : "imóveis"} · ${subtitle}</span></header><div class="agenda-cards">${items.map(({ property, meta }) => {
       const date = parseDate(property.nextAdjustment);
-      return `<button class="agenda-card" data-property-id="${property.id}"><span class="agenda-calendar"><strong>${String(date.getDate()).padStart(2, "0")}</strong><span>${date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span></span><span><h3>${property.code}</h3><p>${property.tenant}</p>${statusPill(meta)} <span class="item-subtitle" style="display:inline;margin-left:5px">${relativeDays(meta.days)}</span></span></button>`;
+      return `<button class="agenda-card" data-property-id="${escapeHtml(property.id)}"><span class="agenda-calendar"><strong>${String(date.getDate()).padStart(2, "0")}</strong><span>${date.toLocaleDateString("pt-BR", { month: "short" }).replace(".", "")}</span></span><span><h3>${escapeHtml(property.code)}</h3><p>${escapeHtml(property.tenant)}</p>${statusPill(meta)} <span class="item-subtitle" style="display:inline;margin-left:5px">${relativeDays(meta.days)}</span></span></button>`;
     }).join("")}</div></section>`;
   }).join("");
   app.innerHTML = `${heading("Calendário operacional", "Agenda de reajustes", "Prioridades ordenadas pela próxima data prevista. Abra um imóvel para ver a sequência sugerida de ações.", `<button class="button secondary" data-action="export"><span data-icon="download"></span> Exportar agenda</button>`)}<div class="agenda-sections">${sections}</div>`;
@@ -298,7 +331,7 @@ function renderHistory() {
     return b.date.localeCompare(a.date);
   });
   app.innerHTML = `${heading("Linha do tempo", "Histórico de imóveis e inquilinos", "Mudanças de sala, entradas, saídas, reajustes e acompanhamentos ficam vinculados ao cadastro do imóvel.")}
-    <section class="panel"><div class="panel-body" style="padding-top:16px"><div class="timeline">${items.map((item) => `<div class="timeline-item"><span class="timeline-dot"></span><span class="timeline-date">${item.date ? formatDate(item.date) : "Data anterior"}</span><div class="timeline-content"><strong>${item.title} · ${item.propertyCode}</strong><p>${item.description}</p></div><button class="button ghost" data-property-id="${item.propertyId}">Ver imóvel</button></div>`).join("")}</div></div></section>`;
+    <section class="panel"><div class="panel-body" style="padding-top:16px"><div class="timeline">${items.map((item) => `<div class="timeline-item"><span class="timeline-dot"></span><span class="timeline-date">${item.date ? formatDate(item.date) : "Data anterior"}</span><div class="timeline-content"><strong>${escapeHtml(item.title)} · ${escapeHtml(item.propertyCode)}</strong><p>${escapeHtml(item.description)}</p></div><button class="button ghost" data-property-id="${escapeHtml(item.propertyId)}">Ver imóvel</button></div>`).join("")}</div></div></section>`;
 }
 
 function renderDocuments() {
@@ -327,7 +360,7 @@ function renderSettings() {
       <div class="roadmap-item"><span class="roadmap-step">05</span><div><strong>Contratos e reajustes automáticos</strong><p>Formulários, modelos, índice oficial e geração de documentos.</p></div><span class="roadmap-status">Futuro</span></div>
       <div class="roadmap-item"><span class="roadmap-step">06</span><div><strong>Consulta e notificação de IPTU</strong><p>Busca por imóvel, geração do PDF e envio ao inquilino.</p></div><span class="roadmap-status">Futuro</span></div>
     </div></section>
-    <section class="panel" style="margin-top:18px"><header class="panel-header"><div><h2>Fonte dos dados</h2><p>Base inicial utilizada por esta versão</p></div></header><div class="panel-body"><div class="info-grid"><div class="info-item"><span>Última consolidação</span><strong>${formatDate(SOURCE_UPDATED_AT)}</strong></div><div class="info-item"><span>Unidades cadastradas</span><strong>${properties.length}</strong></div><div class="info-item"><span>Persistência desta versão</span><strong>Navegador local</strong></div><div class="info-item"><span>Próxima integração</span><strong>Google Planilhas / banco de dados</strong></div></div></div></section>`;
+    <section class="panel" style="margin-top:18px"><header class="panel-header"><div><h2>Fonte dos dados</h2><p>Base central utilizada por esta versão</p></div></header><div class="panel-body"><div class="info-grid"><div class="info-item"><span>Última consolidação</span><strong>${formatDate(SOURCE_UPDATED_AT)}</strong></div><div class="info-item"><span>Unidades cadastradas</span><strong>${properties.length}</strong></div><div class="info-item"><span>Persistência desta versão</span><strong>MySQL centralizado</strong></div><div class="info-item"><span>Estrutura preparada</span><strong>Contratos, pagamentos e documentos</strong></div></div></div></section>`;
 }
 
 function render() {
@@ -358,20 +391,20 @@ function openProperty(propertyId) {
   const meta = adjustmentMeta(property);
   const history = propertyHistory(property);
   const steps = getNextSteps(property);
-  drawer.innerHTML = `<header class="drawer-header"><div class="drawer-top"><div><span class="eyebrow">${property.type} · ${property.occupancy}</span><h2>${property.code}</h2><p>${property.tenant}${property.currentUse ? ` · ${property.currentUse}` : ""}</p></div><button class="icon-button" data-close-drawer aria-label="Fechar"><span data-icon="close"></span></button></div>
+  drawer.innerHTML = `<header class="drawer-header"><div class="drawer-top"><div><span class="eyebrow">${escapeHtml(property.type)} · ${escapeHtml(property.occupancy)}</span><h2>${escapeHtml(property.code)}</h2><p>${escapeHtml(property.tenant)}${property.currentUse ? ` · ${escapeHtml(property.currentUse)}` : ""}</p></div><button class="icon-button" data-close-drawer aria-label="Fechar"><span data-icon="close"></span></button></div>
     <div class="drawer-summary"><div class="drawer-stat"><span>Aluguel vigente</span><strong>${property.rent ? fullCurrency.format(property.rent) : "Não se aplica"}</strong></div><div class="drawer-stat"><span>Próximo reajuste</span><strong>${property.nextAdjustment ? formatDate(property.nextAdjustment) : "Não se aplica"}</strong></div><div class="drawer-stat"><span>Situação</span><strong>${meta.label}</strong></div></div></header>
     <div class="drawer-body">
       <section class="drawer-section"><div class="drawer-section-title"><h3>Informações atuais</h3>${statusPill(meta)}</div><div class="info-grid">
-        <div class="info-item"><span>Inquilino / responsável</span><strong>${property.tenant}</strong></div><div class="info-item"><span>Status de ocupação</span><strong>${property.occupancy}</strong></div>
-        <div class="info-item"><span>Forma de cobrança</span><strong>${property.billing}</strong></div><div class="info-item"><span>Encargos</span><strong>${property.charges}</strong></div>
-        <div class="info-item"><span>Último evento</span><strong>${property.lastEvent}</strong></div><div class="info-item"><span>Data do evento</span><strong>${formatDate(property.lastDate)}</strong></div>
+        <div class="info-item"><span>Inquilino / responsável</span><strong>${escapeHtml(property.tenant)}</strong></div><div class="info-item"><span>Status de ocupação</span><strong>${escapeHtml(property.occupancy)}</strong></div>
+        <div class="info-item"><span>Forma de cobrança</span><strong>${escapeHtml(property.billing)}</strong></div><div class="info-item"><span>Encargos</span><strong>${escapeHtml(property.charges)}</strong></div>
+        <div class="info-item"><span>Último evento</span><strong>${escapeHtml(property.lastEvent)}</strong></div><div class="info-item"><span>Data do evento</span><strong>${formatDate(property.lastDate)}</strong></div>
         ${property.referenceRent ? `<div class="info-item"><span>Valor integral / referência</span><strong>${fullCurrency.format(property.referenceRent)}</strong></div>` : ""}
         ${property.iptu ? `<div class="info-item"><span>IPTU mensal registrado</span><strong>${fullCurrency.format(property.iptu)}</strong></div>` : ""}
       </div></section>
-      <section class="drawer-section"><div class="drawer-section-title"><h3>Próximos passos</h3><button class="button ghost" data-add-activity="${property.id}"><span data-icon="plus"></span> Registrar andamento</button></div><div class="next-step-list">${steps.map(([title, text]) => `<div class="next-step"><span class="next-step-check"></span><div><strong>${title}</strong><p>${text}</p></div></div>`).join("")}</div></section>
-      ${property.notes ? `<section class="drawer-section"><div class="drawer-section-title"><h3>Observações importantes</h3></div><div class="notes-box">${property.notes}</div></section>` : ""}
-      <section class="drawer-section"><div class="drawer-section-title"><h3>Histórico</h3><span class="item-subtitle">${history.length} registros</span></div>${history.length ? `<div class="timeline">${history.map((item) => `<div class="timeline-item" style="grid-template-columns:32px 80px 1fr"><span class="timeline-dot"></span><span class="timeline-date">${item.date ? formatDate(item.date) : "Anterior"}</span><div class="timeline-content"><strong>${item.title}</strong><p>${item.description}</p></div></div>`).join("")}</div>` : `<div class="empty-state" style="padding:20px"><p>Nenhum evento histórico registrado.</p></div>`}</section>
-      <section class="drawer-section"><div class="drawer-section-title"><h3>Fonte e documentos</h3></div><a class="source-link" href="${property.source}" target="_blank" rel="noreferrer">Abrir fonte no Google Planilhas <span data-icon="external" style="display:inline-block;width:13px;vertical-align:middle"></span></a><p class="item-subtitle" style="white-space:normal;margin-top:8px">Contratos, comprovantes e notificações serão exibidos aqui após a conexão com o Google Drive.</p></section>
+      <section class="drawer-section"><div class="drawer-section-title"><h3>Próximos passos</h3><button class="button ghost" data-add-activity="${escapeHtml(property.id)}"><span data-icon="plus"></span> Registrar andamento</button></div><div class="next-step-list">${steps.map(([title, text]) => `<div class="next-step"><span class="next-step-check"></span><div><strong>${escapeHtml(title)}</strong><p>${escapeHtml(text)}</p></div></div>`).join("")}</div></section>
+      ${property.notes ? `<section class="drawer-section"><div class="drawer-section-title"><h3>Observações importantes</h3></div><div class="notes-box">${escapeHtml(property.notes)}</div></section>` : ""}
+      <section class="drawer-section"><div class="drawer-section-title"><h3>Histórico</h3><span class="item-subtitle">${history.length} registros</span></div>${history.length ? `<div class="timeline">${history.map((item) => `<div class="timeline-item" style="grid-template-columns:32px 80px 1fr"><span class="timeline-dot"></span><span class="timeline-date">${item.date ? formatDate(item.date) : "Anterior"}</span><div class="timeline-content"><strong>${escapeHtml(item.title)}</strong><p>${escapeHtml(item.description)}</p></div></div>`).join("")}</div>` : `<div class="empty-state" style="padding:20px"><p>Nenhum evento histórico registrado.</p></div>`}</section>
+      <section class="drawer-section"><div class="drawer-section-title"><h3>Fonte e documentos</h3></div><a class="source-link" href="${safeExternalUrl(property.source)}" target="_blank" rel="noreferrer">Abrir fonte no Google Planilhas <span data-icon="external" style="display:inline-block;width:13px;vertical-align:middle"></span></a><p class="item-subtitle" style="white-space:normal;margin-top:8px">Contratos, comprovantes e notificações serão exibidos aqui após a conexão com o Google Drive.</p></section>
     </div>`;
   hydrateIcons(drawer);
   drawerBackdrop.hidden = false;
@@ -397,7 +430,7 @@ function closeModal() { modalBackdrop.hidden = true; }
 function toast(title, message) {
   const node = document.createElement("div");
   node.className = "toast";
-  node.innerHTML = `<span data-icon="check"></span><div><strong>${title}</strong><span>${message}</span></div>`;
+  node.innerHTML = `<span data-icon="check"></span><div><strong>${escapeHtml(title)}</strong><span>${escapeHtml(message)}</span></div>`;
   document.querySelector("#toastRegion").append(node);
   hydrateIcons(node);
   setTimeout(() => node.remove(), 4200);
@@ -451,16 +484,27 @@ document.querySelector("#closeModal").addEventListener("click", closeModal);
 document.querySelector("#cancelModal").addEventListener("click", closeModal);
 modalBackdrop.addEventListener("click", (event) => { if (event.target === modalBackdrop) closeModal(); });
 
-document.querySelector("#activityForm").addEventListener("submit", (event) => {
+document.querySelector("#activityForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   const propertyId = document.querySelector("#activityPropertyId").value;
   const type = document.querySelector("#activityType").value;
   const description = document.querySelector("#activityDescription").value.trim();
-  activities.unshift({ id: crypto.randomUUID(), propertyId, type, description, createdAt: new Date().toISOString() });
-  localStorage.setItem(activityKey, JSON.stringify(activities));
-  closeModal();
-  openProperty(propertyId);
-  toast("Registro salvo", "O acompanhamento foi adicionado ao histórico deste imóvel.");
+  const submitButton = event.submitter;
+  if (submitButton) submitButton.disabled = true;
+  try {
+    const result = await apiRequest("./api/activities.php", {
+      method: "POST",
+      body: JSON.stringify({ propertyId, type, description }),
+    });
+    activities.unshift(result.activity);
+    closeModal();
+    openProperty(propertyId);
+    toast("Registro salvo", "O acompanhamento foi adicionado ao histórico deste imóvel.");
+  } catch (error) {
+    toast("Não foi possível salvar", error.message);
+  } finally {
+    if (submitButton) submitButton.disabled = false;
+  }
 });
 
 app.addEventListener("input", (event) => {
@@ -493,9 +537,19 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") { closeDrawer(); closeModal(); sidebar.classList.remove("open"); }
 });
 
-const initialView = location.hash.slice(1);
-if (["dashboard", "properties", "agenda", "history", "documents", "settings"].includes(initialView)) state.view = initialView;
-document.querySelector("#propertyNavCount").textContent = properties.length;
-document.querySelector("#agendaNavCount").textContent = getPriorityProperties().length;
-hydrateIcons();
-render();
+async function startApplication() {
+  const initialView = location.hash.slice(1);
+  if (["dashboard", "properties", "agenda", "history", "documents", "settings"].includes(initialView)) state.view = initialView;
+  app.innerHTML = '<div class="empty-state"><h3>Carregando dados…</h3><p>Conectando ao banco de dados.</p></div>';
+  hydrateIcons();
+  try {
+    await loadApplicationData();
+    document.querySelector("#propertyNavCount").textContent = properties.length;
+    document.querySelector("#agendaNavCount").textContent = getPriorityProperties().length;
+    render();
+  } catch (error) {
+    app.innerHTML = `<div class="empty-state"><h3>Banco de dados indisponível</h3><p>${escapeHtml(error.message)}</p><p>Confira o arquivo .env e execute a migração inicial.</p></div>`;
+  }
+}
+
+startApplication();
