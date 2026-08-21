@@ -25,7 +25,8 @@ ENV APP_ENV=production \
 EXPOSE 80
 
 
-# Health check para o EasyPanel monitorar o container
-HEALTHCHECK NONE
-# Iniciar a aplicação
-CMD ["node", "node_modules/vinext/dist/cli.js", "start", "--port", "80", "--hostname", "0.0.0.0"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD php -r 'exit(@file_get_contents("http://127.0.0.1/api/health.php") === false ? 1 : 0);'
+
+ENTRYPOINT ["/usr/local/bin/site-alugueis-entrypoint"]
+CMD ["apache2-foreground"]
